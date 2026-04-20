@@ -1,9 +1,12 @@
-export const DOODLE_CLASSES = [
-  'apple', 'banana', 'bird', 'boat', 'book', 'bottle', 'bridge', 'butterfly',
-  'car', 'chair', 'clock', 'cloud', 'cup', 'dog', 'door', 'envelope', 'eye',
-  'fish', 'flower', 'hat', 'heart', 'house', 'key', 'ladder', 'leaf',
-  'lightning', 'moon', 'mountain', 'pants', 'pencil', 'potato', 'snake',
-  'spoon', 'star', 'sun', 'sword', 'tree', 'umbrella', 'zigzag'
+export const STORY_POOLS = [
+  ['circle', 'square', 'triangle', 'line', 'star', 'heart', 'moon', 'cloud', 'sun', 'lightning'], // Stage 1 (10 words)
+  ['cup', 'book', 'hat', 'apple', 'potato', 'banana', 'spoon', 'tree', 'leaf', 'fish', 'bird', 'key', 'envelope', 'door', 'sword'], // Stage 2 (15 words)
+  ['shoe', 'airplane', 'car', 'boat', 'umbrella', 'house', 'bridge', 'mountain', 'pencil', 'pants', 'snake', 'dog', 'clock', 'butterfly', 'chair', 'scissors', 'mushroom', 'eyeglasses', 'bed', 'bicycle'] // Stage 3 (20 words)
+];
+
+export const ENDLESS_POOL = [
+  ...STORY_POOLS[0], ...STORY_POOLS[1], ...STORY_POOLS[2],
+  'eye', 'ladder', 'zigzag' // Extras
 ];
 
 export class GameEngine {
@@ -20,6 +23,13 @@ export class GameEngine {
     this.words = [];
     this.spawnTimer = 0;
     this.spawnInterval = 5000; // ms (was 3000)
+
+    this.gameState = 'MENU'; // 'MENU', 'PLAYING', 'GAME_OVER', 'STAGE_CLEAR', 'WIN'
+    this.gameMode = 'ENDLESS'; // 'ENDLESS', 'STORY'
+    this.storyStage = 0;
+    this.maxUnlockedStage = 0;
+    this.wordsSpawned = 0;
+    this.targetWords = Infinity;
 
     this.lastTime = performance.now();
 
@@ -67,8 +77,65 @@ export class GameEngine {
     this.canvas.height = size;
   }
 
+  startGame(mode, startStage = 0) {
+    this.gameMode = mode;
+    this.gameState = 'PLAYING';
+    this.score = 0;
+    this.health = 10;
+    this.words = [];
+    this.spawnTimer = 0;
+    this.wordsSpawned = 0;
+    this.scoreEl.innerText = this.score;
+    this.healthEl.innerText = this.health;
+    this.lastTime = performance.now();
+
+    if (this.gameMode === 'STORY') {
+      this.storyStage = startStage;
+      if (this.storyStage === 0) {
+        this.targetWords = 10; // Stage 1
+        this.spawnInterval = 6000;
+      } else if (this.storyStage === 1) {
+        this.targetWords = 15; // Stage 2
+        this.spawnInterval = 5000;
+      } else {
+        this.targetWords = 20; // Stage 3
+        this.spawnInterval = 4000;
+      }
+    } else {
+      this.targetWords = Infinity;
+      this.spawnInterval = 5000;
+    }
+  }
+
+  nextStage() {
+    this.storyStage++;
+    this.gameState = 'PLAYING';
+    this.words = [];
+    this.spawnTimer = 0;
+    this.wordsSpawned = 0;
+    this.lastTime = performance.now();
+
+    if (this.storyStage === 1) {
+      this.targetWords = 15; // Stage 2
+      this.spawnInterval = 5000;
+      this.health = Math.min(10, this.health + 3); // Heal some health
+    } else if (this.storyStage === 2) {
+      this.targetWords = 20; // Stage 3
+      this.spawnInterval = 4000;
+      this.health = Math.min(10, this.health + 3);
+    }
+    this.healthEl.innerText = this.health;
+  }
+
   spawnWord() {
-    const wordText = DOODLE_CLASSES[Math.floor(Math.random() * DOODLE_CLASSES.length)];
+    if (this.wordsSpawned >= this.targetWords) return;
+
+    let currentPool = ENDLESS_POOL;
+    if (this.gameMode === 'STORY') {
+      currentPool = STORY_POOLS[this.storyStage] || STORY_POOLS[0];
+    }
+
+    const wordText = currentPool[Math.floor(Math.random() * currentPool.length)];
     const enemyIndex = Math.floor(Math.random() * this.enemySprites.length);
 
     // Radial spawning logic
@@ -86,6 +153,7 @@ export class GameEngine {
       isEnemy: true,
       enemySpriteIndex: enemyIndex
     });
+    this.wordsSpawned++;
   }
 
   tryDestroyWord(predictedLabel) {
@@ -103,18 +171,46 @@ export class GameEngine {
     const dt = (currentTime - this.lastTime) / 1000; // delta time in seconds
     this.lastTime = currentTime;
 
+    if (this.gameState === 'MENU') {
+      requestAnimationFrame((t) => this.loop(t));
+      return;
+    }
+
+    if (this.gameState === 'STAGE_CLEAR') {
+      this.drawStageClear();
+      requestAnimationFrame((t) => this.loop(t));
+      return;
+    }
+
+    if (this.gameState === 'WIN') {
+      this.drawWin();
+      return;
+    }
+
     if (this.health <= 0) {
+      this.gameState = 'GAME_OVER';
       this.drawGameOver();
+      return;
+    }
+
+    // Check Win/Clear Conditions
+    if (this.gameMode === 'STORY' && this.wordsSpawned >= this.targetWords && this.words.length === 0) {
+      if (this.storyStage < 2) { // 3 stages total (0, 1, 2)
+        this.gameState = 'STAGE_CLEAR';
+        this.maxUnlockedStage = Math.max(this.maxUnlockedStage, this.storyStage + 1);
+      } else {
+        this.gameState = 'WIN';
+      }
       return;
     }
 
     // Spawning
     this.spawnTimer += dt * 1000;
-    if (this.spawnTimer > this.spawnInterval) {
+    if (this.spawnTimer > this.spawnInterval && this.wordsSpawned < this.targetWords) {
       this.spawnWord();
       this.spawnTimer = 0;
       // progressively harder, but more slowly
-      this.spawnInterval = Math.max(2000, this.spawnInterval - 30);
+      this.spawnInterval = Math.max(1500, this.spawnInterval - 30);
     }
 
     this.update(dt);
@@ -240,6 +336,34 @@ export class GameEngine {
 
     this.ctx.fillStyle = '#fff';
     this.ctx.font = '24px Outfit, sans-serif';
-    this.ctx.fillText("Refresh to restart", this.canvas.width / 2, this.canvas.height / 2 + 50);
+    this.ctx.fillText("Click here to return to menu", this.canvas.width / 2, this.canvas.height / 2 + 50);
+  }
+
+  drawStageClear() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.fillStyle = '#00f3ff';
+    this.ctx.font = 'bold 48px Outfit, sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText("STAGE CLEARED!", this.canvas.width / 2, this.canvas.height / 2);
+
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '24px Outfit, sans-serif';
+    this.ctx.fillText("Click here for Next Stage", this.canvas.width / 2, this.canvas.height / 2 + 50);
+  }
+
+  drawWin() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.fillStyle = '#ffdf00';
+    this.ctx.font = 'bold 48px Outfit, sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText("YOU WIN!", this.canvas.width / 2, this.canvas.height / 2);
+
+    this.ctx.fillStyle = '#fff';
+    this.ctx.font = '24px Outfit, sans-serif';
+    this.ctx.fillText("Click here to return to menu.", this.canvas.width / 2, this.canvas.height / 2 + 50);
   }
 }

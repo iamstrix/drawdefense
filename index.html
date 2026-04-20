@@ -21,7 +21,27 @@
       </div>
     </div>
     
-    <div class="split-container">
+    <!-- Main Menu Overlay -->
+    <div id="main-menu" class="overlay">
+      <h1 class="title">Draw Defense</h1>
+      <div class="menu-buttons">
+        <button id="storyModeBtn">Story Mode</button>
+        <button id="endlessModeBtn">Endless Mode</button>
+      </div>
+    </div>
+    
+    <!-- Level Selection Overlay -->
+    <div id="level-select-menu" class="overlay hidden">
+      <h1 class="title">Select Stage</h1>
+      <div class="menu-buttons">
+        <button id="lvl0Btn">Stage 1: The Basics</button>
+        <button id="lvl1Btn" disabled>Stage 2: Everyday Items</button>
+        <button id="lvl2Btn" disabled>Stage 3: Advanced Objects</button>
+      </div>
+      <button id="backToMenuBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Back to Menu</button>
+    </div>
+    
+    <div class="split-container" id="game-container" style="display: none;">
       <div id="left-pane" class="pane">
         <!-- Game Screen -->
         <canvas id="gameCanvas"></canvas>
