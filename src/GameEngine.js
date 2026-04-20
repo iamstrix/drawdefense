@@ -1,8 +1,9 @@
 export const DOODLE_CLASSES = [
-  'apple', 'banana', 'bridge', 'butterfly', 'car', 'cloud', 'cup', 
-  'dog', 'door', 'envelope', 'eye', 'flower', 'house', 'key', 
-  'ladder', 'leaf', 'lightning', 'mountain', 'pants', 'pencil', 
-  'potato', 'snake', 'star', 'sun', 'sword', 'tree', 'umbrella', 'zigzag'
+  'apple', 'banana', 'bird', 'boat', 'book', 'bottle', 'bridge', 'butterfly',
+  'car', 'chair', 'clock', 'cloud', 'cup', 'dog', 'door', 'envelope', 'eye',
+  'fish', 'flower', 'hat', 'heart', 'house', 'key', 'ladder', 'leaf',
+  'lightning', 'moon', 'mountain', 'pants', 'pencil', 'potato', 'snake',
+  'spoon', 'star', 'sun', 'sword', 'tree', 'umbrella', 'zigzag'
 ];
 
 export class GameEngine {
