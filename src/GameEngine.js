@@ -18,7 +18,7 @@ export class GameEngine {
     
     this.words = [];
     this.spawnTimer = 0;
-    this.spawnInterval = 3000; // ms
+    this.spawnInterval = 5000; // ms (was 3000)
     
     this.lastTime = performance.now();
     
@@ -50,7 +50,7 @@ export class GameEngine {
       text: wordText,
       x: cx + Math.cos(angle) * distance,
       y: cy + Math.sin(angle) * distance,
-      speed: 15 + Math.random() * 10 // pixels per second
+      speed: 8 + Math.random() * 6 // pixels per second (was 15 + 10)
     });
   }
   
@@ -79,8 +79,8 @@ export class GameEngine {
     if (this.spawnTimer > this.spawnInterval) {
       this.spawnWord();
       this.spawnTimer = 0;
-      // progressively harder
-      this.spawnInterval = Math.max(1000, this.spawnInterval - 50); 
+      // progressively harder, but more slowly
+      this.spawnInterval = Math.max(2000, this.spawnInterval - 30); 
     }
     
     this.update(dt);

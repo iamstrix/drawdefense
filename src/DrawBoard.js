@@ -97,7 +97,7 @@ export class DrawBoard {
     if (this.predictionTimer) clearTimeout(this.predictionTimer);
     this.predictionTimer = setTimeout(() => {
       this.predict();
-    }, 1000); // Wait 1 second to see if user draws more
+    }, 600); // Wait 0.6 seconds to see if user draws more (was 1s)
   }
 
   applyStyle() {
@@ -147,15 +147,39 @@ export class DrawBoard {
     
     this.predictionOutput.innerText = "Analyzing...";
     
-    // As Claude pointed out, since it is already a distinct canvas, 
-    // we can just export it directly without the complex bounding box math!
-    const base64Image = this.canvas.toDataURL('image/png');
+    // LATENCY OPTIMIZATION: Downscale and compress image
+    // Most VLMs are optimized for ~448x448. Sending a giant PNG is slow.
+    const maxDimension = 448;
+    let width = this.canvas.width;
+    let height = this.canvas.height;
+    
+    if (width > maxDimension || height > maxDimension) {
+      if (width > height) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+      } else {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+      }
+    }
+
+    // Create off-screen canvas for resizing
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = height;
+    const octx = offscreen.getContext('2d');
+    
+    // Draw the main canvas onto the smaller offscreen canvas
+    octx.drawImage(this.canvas, 0, 0, width, height);
+
+    // Export as JPEG (usually much smaller than PNG for these sketches)
+    const base64Image = offscreen.toDataURL('image/jpeg', 0.7);
     
     // Get active words
     const activeWords = this.gameEngine.words.map(w => w.text);
 
-    // We send full canvas to recognizer
-    console.log('[Telemetry] Calling VLM classify() with full canvas');
+    // We send compressed/resized image to recognizer
+    console.log(`[Telemetry] Calling VLM classify() with optimized image (${width}x${height}, JPEG)`);
     this.recognizer.classify(base64Image, activeWords, (result) => {
       if (result.error) {
         this.predictionOutput.innerText = 'Error: API Error';
