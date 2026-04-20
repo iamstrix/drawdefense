@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- ml5.js -->
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+    <title>Draw Defense</title>
+  </head>
+  <body>
+    <div id="ui-layer">
+      <div class="stats">
+        <div>Score: <span id="scoreVal">0</span></div>
+        <div>Health: <span id="healthVal">10</span></div>
+      </div>
+      <div class="controls">
+        <button id="themeToggleBtn">Galaxy Theme: OFF</button>
+      </div>
+    </div>
+    
+    <div class="split-container">
+      <div id="left-pane" class="pane">
+        <!-- Game Screen -->
+        <canvas id="gameCanvas"></canvas>
+      </div>
+      
+      <div id="right-pane" class="pane">
+        <!-- Draw Board -->
+        <canvas id="drawCanvas"></canvas>
+        <button id="clearDrawBtn">Clear</button>
+        <div id="predictionOutput">Pencil ready...</div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
