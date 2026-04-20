@@ -31,7 +31,9 @@ export class GameEngine {
     this.storyStage = 0;
     this.maxUnlockedStage = 0;
     this.wordsSpawned = 0;
+    this.wordsDestroyed = 0;
     this.targetWords = Infinity;
+    this.onStageClear = null;
 
     this.lastTime = performance.now();
 
@@ -87,6 +89,7 @@ export class GameEngine {
     this.words = [];
     this.spawnTimer = 0;
     this.wordsSpawned = 0;
+    this.wordsDestroyed = 0;
     this.scoreEl.innerText = this.score;
     this.healthEl.innerText = this.health;
     this.lastTime = performance.now();
@@ -174,6 +177,7 @@ export class GameEngine {
     if (matchingWords.length > 0) {
       this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
       this.score += 10;
+      this.wordsDestroyed++;
       this.scoreEl.innerText = this.score;
       return true;
     }
@@ -190,7 +194,7 @@ export class GameEngine {
     }
 
     if (this.gameState === 'STAGE_CLEAR') {
-      this.drawStageClear();
+      // Just idle, visual overlay is handled by main.js
       requestAnimationFrame((t) => this.loop(t));
       return;
     }
@@ -211,6 +215,7 @@ export class GameEngine {
       if (this.storyStage < 2) { // 3 stages total (0, 1, 2)
         this.gameState = 'STAGE_CLEAR';
         this.maxUnlockedStage = Math.max(this.maxUnlockedStage, this.storyStage + 1);
+        if (this.onStageClear) this.onStageClear(this.wordsDestroyed);
       } else {
         this.gameState = 'WIN';
       }

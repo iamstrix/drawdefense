@@ -136,7 +136,7 @@ body::before {
   position: relative;
 }
 
-#main-menu, #level-select-menu {
+#main-menu, #level-select-menu, #stage-clear-menu {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   background-color: var(--bg-color);
@@ -148,12 +148,12 @@ body::before {
   transition: opacity 0.5s ease;
 }
 
-#main-menu.hidden, #level-select-menu.hidden {
+#main-menu.hidden, #level-select-menu.hidden, #stage-clear-menu.hidden {
   opacity: 0;
   pointer-events: none;
 }
 
-#main-menu .title, #level-select-menu .title {
+#main-menu .title, #level-select-menu .title, #stage-clear-menu .title {
   font-size: 64px;
   margin-bottom: 40px;
   text-shadow: 0 0 15px var(--accent-color);

@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // UI Elements
   const mainMenu = document.getElementById('main-menu');
   const levelSelectMenu = document.getElementById('level-select-menu');
+  const stageClearMenu = document.getElementById('stage-clear-menu');
   const gameContainer = document.getElementById('game-container');
+  
+  const wordsClearedVal = document.getElementById('wordsClearedVal');
+  const nextStageBtn = document.getElementById('nextStageBtn');
+  const stageClearMenuBtn = document.getElementById('stageClearMenuBtn');
   
   const storyBtn = document.getElementById('storyModeBtn');
   const endlessBtn = document.getElementById('endlessModeBtn');
@@ -62,11 +67,30 @@ document.addEventListener('DOMContentLoaded', () => {
   lvl1Btn.addEventListener('click', () => start('STORY', 1));
   lvl2Btn.addEventListener('click', () => start('STORY', 2));
 
-  // Handle advancing or returning from game screens
+  // --- STAGE CLEAR MENU LOGIC ---
+  function hideStageClearMenu() {
+    stageClearMenu.classList.add('hidden');
+  }
+
+  gameEngine.onStageClear = (wordsDestroyed) => {
+    wordsClearedVal.innerText = wordsDestroyed;
+    stageClearMenu.classList.remove('hidden');
+  };
+
+  nextStageBtn.addEventListener('click', () => {
+    hideStageClearMenu();
+    gameEngine.nextStage();
+  });
+
+  stageClearMenuBtn.addEventListener('click', () => {
+    hideStageClearMenu();
+    gameContainer.style.display = 'none';
+    showLevelSelect();
+  });
+
+  // Handle advancing or returning from legacy canvas screens (Win/Game Over)
   gameEngine.canvas.addEventListener('click', () => {
-    if (gameEngine.gameState === 'STAGE_CLEAR') {
-      gameEngine.nextStage();
-    } else if (gameEngine.gameState === 'GAME_OVER' || gameEngine.gameState === 'WIN') {
+    if (gameEngine.gameState === 'GAME_OVER' || gameEngine.gameState === 'WIN') {
       gameContainer.style.display = 'none';
       if (gameEngine.gameMode === 'STORY') {
         showLevelSelect();
