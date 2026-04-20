@@ -69,17 +69,22 @@ export class GameEngine {
 
   spawnWord() {
     const wordText = DOODLE_CLASSES[Math.floor(Math.random() * DOODLE_CLASSES.length)];
-    const enemyIndex = Math.floor(Math.random() * 6);
+    const enemyIndex = Math.floor(Math.random() * this.enemySprites.length);
 
-    // Spawn enemy from bottom with associated word
-    const startX = Math.random() * this.canvas.width;
-    const startY = this.canvas.height + 50;
+    // Radial spawning logic
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.max(this.canvas.width, this.canvas.height) / 2 + 50; // starts outside
+    
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
 
     this.words.push({
       text: wordText,
       x: cx + Math.cos(angle) * distance,
       y: cy + Math.sin(angle) * distance,
-      speed: 8 + Math.random() * 6 // pixels per second (was 15 + 10)
+      speed: 8 + Math.random() * 6, // pixels per second
+      isEnemy: true,
+      enemySpriteIndex: enemyIndex
     });
   }
 
