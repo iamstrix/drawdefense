@@ -19,6 +19,8 @@ export class GameEngine {
 
     this.scoreEl = document.getElementById('scoreVal');
     this.healthEl = document.getElementById('healthVal');
+    this.wordsLeftEl = document.getElementById('wordsLeftVal');
+    this.wordsLeftContainer = document.getElementById('wordsLeftContainer');
 
     this.words = [];
     this.spawnTimer = 0;
@@ -90,6 +92,7 @@ export class GameEngine {
     this.lastTime = performance.now();
 
     if (this.gameMode === 'STORY') {
+      this.wordsLeftContainer.style.display = 'block';
       this.storyStage = startStage;
       if (this.storyStage === 0) {
         this.targetWords = 10; // Stage 1
@@ -101,7 +104,9 @@ export class GameEngine {
         this.targetWords = 20; // Stage 3
         this.spawnInterval = 4000;
       }
+      this.wordsLeftEl.innerText = this.targetWords;
     } else {
+      this.wordsLeftContainer.style.display = 'none';
       this.targetWords = Infinity;
       this.spawnInterval = 5000;
     }
@@ -125,6 +130,10 @@ export class GameEngine {
       this.health = Math.min(10, this.health + 3);
     }
     this.healthEl.innerText = this.health;
+    
+    if (this.gameMode === 'STORY') {
+      this.wordsLeftEl.innerText = this.targetWords;
+    }
   }
 
   spawnWord() {
@@ -154,6 +163,10 @@ export class GameEngine {
       enemySpriteIndex: enemyIndex
     });
     this.wordsSpawned++;
+    
+    if (this.gameMode === 'STORY') {
+      this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
+    }
   }
 
   tryDestroyWord(predictedLabel) {
