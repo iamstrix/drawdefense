@@ -12,13 +12,26 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api\/hf/, '/hf-inference'),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
-              // Strip X-Forwarded-Host to prevent HF routing from returning 404
               proxyReq.removeHeader('x-forwarded-host');
               proxyReq.removeHeader('x-forwarded-port');
               proxyReq.removeHeader('x-forwarded-proto');
-              
-              // Inject the API key server-side so it never leaks to the browser
               proxyReq.setHeader('Authorization', `Bearer ${env.VITE_HF_API_KEY}`);
+            });
+          }
+        },
+        '/api/groq': {
+          target: 'https://api.groq.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/groq/, ''),
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              proxyReq.removeHeader('x-forwarded-host');
+              proxyReq.removeHeader('x-forwarded-port');
+              proxyReq.removeHeader('x-forwarded-proto');
+              // We inject the Groq key here if it exists in env
+              if (env.VITE_GROQ_API_KEY && env.VITE_GROQ_API_KEY !== 'gsk_...') {
+                proxyReq.setHeader('Authorization', `Bearer ${env.VITE_GROQ_API_KEY}`);
+              }
             });
           }
         }

@@ -15,7 +15,7 @@ export class DrawBoard {
     this.clearBtn = document.getElementById('clearDrawBtn');
     
     // Setup model using Vite inject
-    const apiKey = import.meta.env.VITE_HF_API_KEY || '';
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY || '';
     this.recognizer = new VLMRecognizer(apiKey);
     
     // Bind events

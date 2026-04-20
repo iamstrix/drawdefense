@@ -1,15 +1,15 @@
 export class VLMRecognizer {
   constructor(apiKey) {
     this.apiKey = apiKey; // kept for validation check only; actual injection is done server-side via vite proxy
-    // Route via Hugging Face Router's OpenAI-compatible Chat Completions API
-    this.apiUrl = `https://router.huggingface.co/v1/chat/completions`;
-    this.modelId = `Qwen/Qwen3-VL-8B-Instruct`;
-    this.isReady = !!this.apiKey && !this.apiKey.includes('your_token_here');
+    // Route via local Groq proxy: /api/groq → https://api-groq.com
+    this.apiUrl = `/api/groq/openai/v1/chat/completions`;
+    this.modelId = `meta-llama/llama-4-scout-17b-16e-instruct`;
+    this.isReady = !!this.apiKey && !this.apiKey.includes('gsk_...');
 
     if (!this.isReady) {
-      console.warn('[VLM] HF API Key missing or placeholder. Open .env and set VITE_HF_API_KEY=hf_...');
+      console.warn('[VLM] Groq API Key missing or placeholder. Open .env and set VITE_GROQ_API_KEY=gsk_...');
     } else {
-      console.log('[VLM] VLMRecognizer initialized with Hugging Face ViLT VQA (via Router)');
+      console.log('[VLM] VLMRecognizer initialized with Groq Llama 4 Scout');
     }
   }
 
@@ -21,8 +21,10 @@ export class VLMRecognizer {
     }
 
     // Ensure we keep the full data URI (OpenAI format needs data:image/...;base64,...)
-    // Build the question from the active words currently spawned in-game
-    const question = `Which of these words best describes this sketch: ${activeWords.join(', ')}? Respond with ONLY the single matching word, nothing else.`;
+    // Prompt engineering: Balance being forgiving of crude drawings while still rejecting total nonsense.
+    const question = `Target words: ${activeWords.join(', ')}. Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, a random scribble, or a single line, output ONLY 'none'`;
+
+    // Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, a random scribble, or a single line, output ONLY 'none'.
     console.log('[VLM] Question sent:', question);
 
     const payload = {
