@@ -22,6 +22,35 @@ export class GameEngine {
     
     this.lastTime = performance.now();
     
+    // Load player sprite
+    this.playerSprite = new Image();
+    this.playerSprite.src = './src/assets/cat.png';
+    this.playerSpriteLoaded = false;
+    this.playerSprite.onload = () => {
+      this.playerSpriteLoaded = true;
+    };
+    
+    // Load enemy sprites
+    this.enemySprites = [];
+    this.enemySpritesLoaded = 0;
+    const totalEnemies = 6;
+    for (let i = 1; i <= totalEnemies; i++) {
+      const enemyImg = new Image();
+      enemyImg.src = `./src/assets/enemy${i.toString().padStart(2, '0')}.png`;
+      enemyImg.onload = () => {
+        this.enemySpritesLoaded++;
+      };
+      this.enemySprites.push(enemyImg);
+    }
+    
+    // // Load background image
+    // this.backgroundImage = new Image();
+    // this.backgroundImage.src = './src/assets/l3.jpg';
+    // this.backgroundLoaded = false;
+    // this.backgroundImage.onload = () => {
+    //   this.backgroundLoaded = true;
+    // };
+    
     // Resize handler
     window.addEventListener('resize', () => this.resize());
     this.resize();
@@ -39,25 +68,26 @@ export class GameEngine {
   
   spawnWord() {
     const wordText = DOODLE_CLASSES[Math.floor(Math.random() * DOODLE_CLASSES.length)];
+    const enemyIndex = Math.floor(Math.random() * 6);
     
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.max(this.canvas.width, this.canvas.height) / 2 + 50; // starts outside
-    
-    const cx = this.canvas.width / 2;
-    const cy = this.canvas.height / 2;
+    // Spawn enemy from bottom with associated word
+    const startX = Math.random() * this.canvas.width;
+    const startY = this.canvas.height + 50;
     
     this.words.push({
       text: wordText,
-      x: cx + Math.cos(angle) * distance,
-      y: cy + Math.sin(angle) * distance,
-      speed: 15 + Math.random() * 10 // pixels per second
+      x: startX,
+      y: startY,
+      speed: 20 + Math.random() * 15,
+      enemySpriteIndex: enemyIndex,
+      isEnemy: true
     });
   }
   
   tryDestroyWord(predictedLabel) {
-    const idx = this.words.findIndex(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
-    if (idx !== -1) {
-      this.words.splice(idx, 1);
+    const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
+    if (matchingWords.length > 0) {
+      this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
       this.score += 10;
       this.scoreEl.innerText = this.score;
       return true;
@@ -99,7 +129,7 @@ export class GameEngine {
       const dy = cy - w.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       
-      if (dist < 20) { // reached player
+      if (dist < 50) { // reached player
         this.words.splice(i, 1);
         this.health -= 1;
         this.healthEl.innerText = this.health;
@@ -117,6 +147,11 @@ export class GameEngine {
     
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
+
+    // // Draw background image
+    // if (this.backgroundLoaded) {
+    //   this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+    // }
     
     const rootStyles = getComputedStyle(document.documentElement);
     const textColor = rootStyles.getPropertyValue('--text-color').trim() || '#000';
@@ -124,37 +159,66 @@ export class GameEngine {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     
     // Draw Player (Center Base)
-    this.ctx.beginPath();
-    this.ctx.arc(cx, cy, 20, 0, Math.PI * 2);
-    if (themeGalaxy) {
-      this.ctx.fillStyle = '#111';
-      this.ctx.fill();
-      this.ctx.strokeStyle = accentColor;
-      this.ctx.lineWidth = 3;
-      this.ctx.shadowBlur = 15;
-      this.ctx.shadowColor = accentColor;
-      this.ctx.stroke();
+    if (this.playerSpriteLoaded) {
+      const spriteSize = 100; // Adjust size as needed
+      this.ctx.drawImage(
+        this.playerSprite,
+        cx - spriteSize / 2,
+        cy - spriteSize / 2,
+        spriteSize,
+        spriteSize
+      );
     } else {
-      this.ctx.fillStyle = textColor;
-      this.ctx.fill();
-      this.ctx.shadowBlur = 0;
+      // Fallback to circle while image loads
+      this.ctx.beginPath();
+      this.ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+      if (themeGalaxy) {
+        this.ctx.fillStyle = '#111';
+        this.ctx.fill();
+        this.ctx.strokeStyle = accentColor;
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowBlur = 15;
+        this.ctx.shadowColor = accentColor;
+        this.ctx.stroke();
+      } else {
+        this.ctx.fillStyle = textColor;
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
+      }
     }
     
-    // Draw Words
-    this.ctx.font = 'bold 24px Outfit, sans-serif';
+    // Draw Words and Enemies
+    this.ctx.font = 'bold 12px Outfit, sans-serif';
+    this.ctx.fillStyle = '#fff';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     
     for (const w of this.words) {
-      if (themeGalaxy) {
-        this.ctx.fillStyle = '#fff';
-        this.ctx.shadowBlur = 10;
-        this.ctx.shadowColor = accentColor;
-      } else {
-        this.ctx.fillStyle = textColor;
-        this.ctx.shadowBlur = 0;
+      if (w.isEnemy) {
+        // Draw enemy sprite
+        const spriteSize = 60;
+        this.ctx.drawImage(
+          this.enemySprites[w.enemySpriteIndex],
+          w.x - spriteSize / 2,
+          w.y - spriteSize / 2,
+          spriteSize,
+          spriteSize
+        );
+        
+        // Draw word text above the sprite
+        this.ctx.font = 'bold 12px Outfit, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        if (themeGalaxy) {
+          this.ctx.fillStyle = '#fff';
+          this.ctx.shadowBlur = 10;
+          this.ctx.shadowColor = accentColor;
+        } else {
+          this.ctx.fillStyle = textColor;
+          this.ctx.shadowBlur = 0;
+        }
+        this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 20);
       }
-      this.ctx.fillText(w.text, w.x, w.y);
     }
     
     // Reset shadow for next frame
