@@ -1,4 +1,4 @@
-import { SketchRecognizer } from './SketchRecognizer.js';
+import { VLMRecognizer } from './VLMRecognizer.js';
 
 export class DrawBoard {
   constructor(canvasId, gameEngine) {
@@ -14,8 +14,9 @@ export class DrawBoard {
     this.predictionOutput = document.getElementById('predictionOutput');
     this.clearBtn = document.getElementById('clearDrawBtn');
     
-    // Setup model
-    this.recognizer = new SketchRecognizer();
+    // Setup model using Vite inject
+    const apiKey = import.meta.env.VITE_HF_API_KEY || '';
+    this.recognizer = new VLMRecognizer(apiKey);
     
     // Bind events
     this.clearBtn.addEventListener('click', () => this.clear());
@@ -59,7 +60,10 @@ export class DrawBoard {
   }
 
   startDraw(e) {
-    if (!this.recognizer.isReady) return; // don't draw if not loaded
+    if (!this.recognizer.isReady) {
+      this.predictionOutput.innerText = 'API Key Missing!';
+      return;
+    }
     this.isDrawing = true;
     const pos = this.getPointerPos(e);
     this.currentPath = [pos];
@@ -143,67 +147,24 @@ export class DrawBoard {
     
     this.predictionOutput.innerText = "Analyzing...";
     
-    // 1. Calculate the bounding box of the drawing
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
+    // As Claude pointed out, since it is already a distinct canvas, 
+    // we can just export it directly without the complex bounding box math!
+    const base64Image = this.canvas.toDataURL('image/png');
     
-    for (const path of this.paths) {
-      for (const pt of path) {
-        if (pt.x < minX) minX = pt.x;
-        if (pt.x > maxX) maxX = pt.x;
-        if (pt.y < minY) minY = pt.y;
-        if (pt.y > maxY) maxY = pt.y;
+    // Get active words
+    const activeWords = this.gameEngine.words.map(w => w.text);
+
+    // We send full canvas to recognizer
+    console.log('[Telemetry] Calling VLM classify() with full canvas');
+    this.recognizer.classify(base64Image, activeWords, (result) => {
+      if (result.error) {
+        this.predictionOutput.innerText = 'Error: API Error';
+        return;
       }
-    }
-    
-    // 2. Make it a perfect square with some padding
-    const padding = 24; 
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const squareSize = Math.max(width, height) + padding * 2;
-    
-    // Center of the drawn bounds
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    
-    // 3. Create an offscreen canvas
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = squareSize;
-    offCanvas.height = squareSize;
-    const offCtx = offCanvas.getContext('2d');
-    
-    // Fill background with white
-    offCtx.fillStyle = '#ffffff';
-    offCtx.fillRect(0, 0, squareSize, squareSize);
-    
-    // Setup drawing style for the AI (strictly white bg / black stroke)
-    offCtx.lineCap = 'round';
-    offCtx.lineJoin = 'round';
-    offCtx.lineWidth = 12;
-    offCtx.strokeStyle = '#000000';
-    
-    // 4. Redraw the paths onto the centered offscreen canvas
-    for (const path of this.paths) {
-      if (path.length < 2) continue;
       
-      const shiftX = (squareSize / 2) - centerX;
-      const shiftY = (squareSize / 2) - centerY;
-      
-      offCtx.beginPath();
-      offCtx.moveTo(path[0].x + shiftX, path[0].y + shiftY);
-      for (let i = 1; i < path.length; i++) {
-        offCtx.lineTo(path[i].x + shiftX, path[i].y + shiftY);
-      }
-      offCtx.stroke();
-    }
-    
-    // We send isolated bounded canvas to recognizer
-    console.log('[Telemetry] Calling recognizer.classify() with cropped canvas size:', squareSize);
-    this.recognizer.classify(offCanvas, (results) => {
-      console.log('[Telemetry] Received results in DrawBoard:', results);
-      const topPredictions = results;
-      const topLabels = topPredictions.map(r => r.label);
-      this.predictionOutput.innerText = `I see: ${topLabels.slice(0, 2).join(', ')}`;
+      console.log('[Telemetry] Received prediction:', result);
+      const topLabels = result.topLabels || [];
+      this.predictionOutput.innerText = `I see: ${topLabels.join(', ')}`;
       
       // Check against game engine
       let matched = false;
