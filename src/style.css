@@ -39,6 +39,13 @@ body {
   width: 100vw;
   display: flex;
   flex-direction: column;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 /* Galaxy Background Effect (Pseudo-element) */
