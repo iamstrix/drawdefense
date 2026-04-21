@@ -5,50 +5,50 @@ export class DrawBoard {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     this.gameEngine = gameEngine;
-    
+
     this.isDrawing = false;
     this.paths = [];
     this.currentPath = [];
-    
+
     this.predictionTimer = null;
     this.predictionOutput = document.getElementById('predictionOutput');
     this.clearBtn = document.getElementById('clearDrawBtn');
-    
+
     // Setup model using Vite inject
     const apiKey = import.meta.env.VITE_GROQ_API_KEY || '';
     this.recognizer = new VLMRecognizer(apiKey);
-    
+
     // Bind events
     this.clearBtn.addEventListener('click', () => this.clear());
-    
+
     this.canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
     this.canvas.addEventListener('pointermove', (e) => this.draw(e));
     this.canvas.addEventListener('pointerup', (e) => this.endDraw(e));
     this.canvas.addEventListener('pointerleave', (e) => this.endDraw(e));
-    
+
     // Resize handler
     window.addEventListener('resize', () => this.resize());
     // Also re-draw when theme is toggled because border changes but the actual line colors might need switching
     window.addEventListener('themeToggled', () => this.redrawAll());
     this.resize();
   }
-  
+
   resize() {
     const parent = this.canvas.parentElement;
     const size = Math.min(parent.clientWidth, parent.clientHeight) - 20;
     this.canvas.width = size;
     this.canvas.height = size;
-    
+
     // Re-fill white base background
     this.fillBackground();
     this.redrawAll();
   }
-  
+
   fillBackground() {
     this.ctx.fillStyle = "#ffffff"; // DoodleNet expects white background and black stroke
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
-  
+
   getPointerPos(e) {
     const rect = this.canvas.getBoundingClientRect();
     const scaleX = this.canvas.width / rect.width;
@@ -60,6 +60,7 @@ export class DrawBoard {
   }
 
   startDraw(e) {
+    if (this.gameEngine && this.gameEngine.isPaused) return;
     if (!this.recognizer.isReady) {
       this.predictionOutput.innerText = 'API Key Missing!';
       return;
@@ -67,7 +68,7 @@ export class DrawBoard {
     this.isDrawing = true;
     const pos = this.getPointerPos(e);
     this.currentPath = [pos];
-    
+
     if (this.predictionTimer) clearTimeout(this.predictionTimer);
   }
 
@@ -75,15 +76,15 @@ export class DrawBoard {
     if (!this.isDrawing) return;
     const pos = this.getPointerPos(e);
     this.currentPath.push(pos);
-    
+
     // Draw segment
     const start = this.currentPath[this.currentPath.length - 2];
     const end = pos;
-    
+
     this.ctx.beginPath();
     this.ctx.moveTo(start.x, start.y);
     this.ctx.lineTo(end.x, end.y);
-    
+
     this.applyStyle();
     this.ctx.stroke();
   }
@@ -92,7 +93,7 @@ export class DrawBoard {
     if (!this.isDrawing) return;
     this.isDrawing = false;
     this.paths.push([...this.currentPath]);
-    
+
     // Debounce prediction
     if (this.predictionTimer) clearTimeout(this.predictionTimer);
     this.predictionTimer = setTimeout(() => {
@@ -102,7 +103,7 @@ export class DrawBoard {
 
   applyStyle() {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
-    
+
     // Note: To make sure DoodleNet predicts correctly, we actually want the internal 
     // canvas state to theoretically match DoodleNet training. But ml5 takes the canvas as is.
     // However, if we invert colors for Galaxy theme, prediction might fail.
@@ -117,7 +118,7 @@ export class DrawBoard {
     this.ctx.lineJoin = 'round';
     this.ctx.lineWidth = 12;
     this.ctx.strokeStyle = '#000000';
-    
+
     if (themeGalaxy) {
       // Glow effect behind the black line
       this.ctx.shadowBlur = 10;
@@ -141,18 +142,31 @@ export class DrawBoard {
     });
   }
 
+  setPaused(isPaused) {
+    this.redrawAll();
+    if (isPaused) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = 'bold 48px Outfit, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2);
+    }
+  }
+
   predict() {
     console.log('[Telemetry] Predict requested. Number of paths:', this.paths.length);
     if (this.paths.length === 0) return;
-    
+
     this.predictionOutput.innerText = "Analyzing...";
-    
+
     // LATENCY OPTIMIZATION: Downscale and compress image
     // Most VLMs are optimized for ~448x448. Sending a giant PNG is slow.
     const maxDimension = 448;
     let width = this.canvas.width;
     let height = this.canvas.height;
-    
+
     if (width > maxDimension || height > maxDimension) {
       if (width > height) {
         height = Math.round((height * maxDimension) / width);
@@ -168,13 +182,13 @@ export class DrawBoard {
     offscreen.width = width;
     offscreen.height = height;
     const octx = offscreen.getContext('2d');
-    
+
     // Draw the main canvas onto the smaller offscreen canvas
     octx.drawImage(this.canvas, 0, 0, width, height);
 
     // Export as JPEG (usually much smaller than PNG for these sketches)
     const base64Image = offscreen.toDataURL('image/jpeg', 0.7);
-    
+
     // Get active words
     const activeWords = this.gameEngine.words.map(w => w.text);
 
@@ -185,11 +199,11 @@ export class DrawBoard {
         this.predictionOutput.innerText = 'Error: API Error';
         return;
       }
-      
+
       console.log('[Telemetry] Received prediction:', result);
       const topLabels = result.topLabels || [];
       this.predictionOutput.innerText = `I see: ${topLabels.join(', ')}`;
-      
+
       // Check against game engine
       let matched = false;
       for (const label of topLabels) {
@@ -199,12 +213,12 @@ export class DrawBoard {
           break;
         }
       }
-      
+
       if (matched) {
-         // Auto clear
-         setTimeout(() => {
-           this.clear();
-         }, 800);
+        // Auto clear
+        setTimeout(() => {
+          this.clear();
+        }, 800);
       }
     });
   }
@@ -212,6 +226,6 @@ export class DrawBoard {
   clear() {
     this.paths = [];
     this.fillBackground();
-    this.predictionOutput.innerText = "Pencil ready...";
+    this.predictionOutput.innerText = "pencil ready...";
   }
 }
