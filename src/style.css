@@ -7,7 +7,7 @@
   --accent-color: #000000;
   --shadow: none;
   --font-family: 'Outfit', sans-serif;
-  
+
   --pane-border: solid 4px var(--border-color);
 }
 
@@ -19,7 +19,7 @@
   --canvas-bg: rgba(10, 10, 25, 0.7);
   --accent-color: #00f3ff;
   --shadow: 0 0 15px var(--accent-color), inset 0 0 15px var(--accent-color);
-  
+
   --pane-border: solid 2px var(--border-color);
 }
 
@@ -45,15 +45,18 @@ body {
 body::before {
   content: "";
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  background-image: 
-    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 50px 160px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1px 1px at 130px 80px, #ffffff, rgba(0,0,0,0)),
-    radial-gradient(1.5px 1.5px at 160px 120px, #ffffff, rgba(0,0,0,0));
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 50px 160px, #ffffff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 130px 80px, #ffffff, rgba(0, 0, 0, 0)),
+    radial-gradient(1.5px 1.5px at 160px 120px, #ffffff, rgba(0, 0, 0, 0));
   background-repeat: repeat;
   background-size: 200px 200px;
   animation: moveStars 60s linear infinite;
@@ -68,20 +71,28 @@ body::before {
 }
 
 @keyframes moveStars {
-  from { background-position: 0 0; }
-  to { background-position: -200px 200px; }
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -200px 200px;
+  }
 }
 
 /* UI Layer */
 #ui-layer {
   position: absolute;
-  top: 0; left: 0; width: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
   padding: 20px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 10;
-  pointer-events: none; /* Let clicks pass through except on children that override it */
+  pointer-events: none;
+  /* Let clicks pass through except on children that override it */
 }
 
 .stats {
@@ -89,7 +100,8 @@ body::before {
   font-weight: 700;
   display: flex;
   gap: 30px;
-  text-shadow: 0 0 5px var(--bg-color); /* Readability in mixed bg */
+  text-shadow: 0 0 5px var(--bg-color);
+  /* Readability in mixed bg */
 }
 
 .controls button {
@@ -123,7 +135,8 @@ body::before {
   display: flex;
   width: 100%;
   height: 100%;
-  padding: 80px 40px 40px 40px; /* offset for top UI */
+  padding: 80px 40px 40px 40px;
+  /* offset for top UI */
   gap: 40px;
 }
 
@@ -136,9 +149,14 @@ body::before {
   position: relative;
 }
 
-#main-menu, #level-select-menu, #stage-clear-menu {
+#main-menu,
+#level-select-menu,
+#stage-clear-menu {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: var(--bg-color);
   z-index: 100;
   display: flex;
@@ -148,15 +166,18 @@ body::before {
   transition: opacity 0.5s ease;
 }
 
-#main-menu.hidden, #level-select-menu.hidden, #stage-clear-menu.hidden {
+#main-menu.hidden,
+#level-select-menu.hidden,
+#stage-clear-menu.hidden {
   opacity: 0;
   pointer-events: none;
 }
 
-#main-menu .title, #level-select-menu .title, #stage-clear-menu .title {
+#main-menu .title,
+#level-select-menu .title,
+#stage-clear-menu .title {
   font-size: 64px;
   margin-bottom: 40px;
-  text-shadow: 0 0 15px var(--accent-color);
 }
 
 .menu-buttons {
@@ -166,7 +187,8 @@ body::before {
   min-width: 300px;
 }
 
-.menu-buttons button, #backToMenuBtn {
+.menu-buttons button,
+#backToMenuBtn {
   font-family: var(--font-family);
   font-size: 24px;
   font-weight: 700;
@@ -179,7 +201,8 @@ body::before {
   transition: all 0.3s ease;
 }
 
-:root.theme-galaxy .menu-buttons button, :root.theme-galaxy #backToMenuBtn {
+:root.theme-galaxy .menu-buttons button,
+:root.theme-galaxy #backToMenuBtn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-color: var(--accent-color);
@@ -187,7 +210,8 @@ body::before {
   text-shadow: 0 0 5px var(--accent-color);
 }
 
-.menu-buttons button:hover:not(:disabled), #backToMenuBtn:hover {
+.menu-buttons button:hover:not(:disabled),
+#backToMenuBtn:hover {
   transform: scale(1.05);
 }
 

@@ -6,31 +6,31 @@ import { DrawBoard } from './DrawBoard.js';
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Theme System
   const themeManager = new ThemeManager();
-  
+
   // Initialize Left Side (Game Engine)
   const gameEngine = new GameEngine('gameCanvas');
-  
+
   // Initialize Right Side (Drawing Board + ML)
   const drawBoard = new DrawBoard('drawCanvas', gameEngine);
-  
+
   // UI Elements
   const mainMenu = document.getElementById('main-menu');
   const levelSelectMenu = document.getElementById('level-select-menu');
   const stageClearMenu = document.getElementById('stage-clear-menu');
   const gameContainer = document.getElementById('game-container');
-  
+
   const wordsClearedVal = document.getElementById('wordsClearedVal');
   const nextStageBtn = document.getElementById('nextStageBtn');
   const stageClearMenuBtn = document.getElementById('stageClearMenuBtn');
-  
+
   const centerControls = document.getElementById('centerControls');
   const pauseBtn = document.getElementById('pauseBtn');
   const quitBtn = document.getElementById('quitBtn');
-  
+
   const storyBtn = document.getElementById('storyModeBtn');
   const endlessBtn = document.getElementById('endlessModeBtn');
   const backToMenuBtn = document.getElementById('backToMenuBtn');
-  
+
   const lvl0Btn = document.getElementById('lvl0Btn');
   const lvl1Btn = document.getElementById('lvl1Btn');
   const lvl2Btn = document.getElementById('lvl2Btn');
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     levelSelectMenu.classList.remove('hidden');
     updateLevelButtons();
   }
-  
+
   function hideLevelSelect() {
     levelSelectMenu.classList.add('hidden');
     mainMenu.classList.remove('hidden');
@@ -59,14 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
     levelSelectMenu.classList.add('hidden');
     gameContainer.style.display = 'flex';
     centerControls.style.display = 'flex';
-    pauseBtn.innerText = "Pause";
+    pauseBtn.innerText = "pause";
     gameEngine.startGame(mode, stage);
-    
+
     // Resize canvases since they were display: none
     gameEngine.resize();
     drawBoard.resize();
     drawBoard.clear(); // Ensure fresh board
-    
+
     // Manage visibility of in-game debug button
     debugClearStageBtn.style.display = (mode === 'STORY') ? 'block' : 'none';
   }
@@ -74,11 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
   storyBtn.addEventListener('click', () => showLevelSelect());
   endlessBtn.addEventListener('click', () => start('ENDLESS'));
   backToMenuBtn.addEventListener('click', () => hideLevelSelect());
-  
+
   lvl0Btn.addEventListener('click', () => start('STORY', 0));
   lvl1Btn.addEventListener('click', () => start('STORY', 1));
   lvl2Btn.addEventListener('click', () => start('STORY', 2));
-  
+
   debugUnlockBtn.addEventListener('click', () => {
     gameEngine.maxUnlockedStage = 2;
     updateLevelButtons();
@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
     gameEngine.wordsSpawned = gameEngine.targetWords;
     gameEngine.words = [];
   });
-  
+
   pauseBtn.addEventListener('click', () => {
     gameEngine.togglePause();
-    pauseBtn.innerText = gameEngine.isPaused ? "Resume" : "Pause";
+    pauseBtn.innerText = gameEngine.isPaused ? "resume" : "pause";
     drawBoard.setPaused(gameEngine.isPaused);
   });
 
