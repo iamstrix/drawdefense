@@ -184,8 +184,7 @@ body::before {
   pointer-events: none;
 }
 
-#main-menu:not(.hidden) .menu-buttons button,
-#main-menu:not(.hidden) .title {
+#main-menu:not(.hidden) .menu-buttons button {
   pointer-events: auto;
 }
 
@@ -401,6 +400,46 @@ body::before {
 
 #settingsBtn:hover {
   transform: rotate(45deg) scale(1.1);
+}
+
+/* Alien Marquee Effect */
+.marquee-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  padding: 20px 0;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+.marquee-content img {
+  height: 80px;
+  width: auto;
+  margin: 0 40px;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 10px var(--accent-color));
+}
+
+.marquee-container.bottom {
+  top: auto;
+  bottom: 0;
+}
+
+.marquee-content.reverse {
+  animation-direction: reverse;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 @media (max-width: 800px) {

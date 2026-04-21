@@ -11,10 +11,10 @@ export class MenuInteractivity {
     this.resize();
     window.addEventListener('resize', () => this.resize());
     
-    this.canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
-    this.canvas.addEventListener('pointermove', (e) => this.draw(e));
-    this.canvas.addEventListener('pointerup', (e) => this.endDraw(e));
-    this.canvas.addEventListener('pointerleave', (e) => this.endDraw(e));
+    window.addEventListener('pointerdown', (e) => this.startDraw(e));
+    window.addEventListener('pointermove', (e) => this.draw(e));
+    window.addEventListener('pointerup', (e) => this.endDraw(e));
+    window.addEventListener('pointerleave', (e) => this.endDraw(e));
     
     this.loop();
   }
