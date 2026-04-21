@@ -25,6 +25,8 @@ export class GameEngine {
     this.levelContainer = document.getElementById('levelContainer');
 
     this.words = [];
+    this.particles = [];
+    this.fadingEnemies = [];
     this.spawnTimer = 0;
     this.spawnInterval = 5000; // ms (was 3000)
 
@@ -37,6 +39,8 @@ export class GameEngine {
     this.wordsDestroyed = 0;
     this.targetWords = Infinity;
     this.onStageClear = null;
+
+    this.debugClickClear = false;
 
     this.lastTime = performance.now();
 
@@ -190,6 +194,16 @@ export class GameEngine {
   tryDestroyWord(predictedLabel) {
     const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
     if (matchingWords.length > 0) {
+      // For each matching word, trigger explosion and move to fading
+      matchingWords.forEach(w => {
+        this.spawnExplosion(w.x, w.y);
+        this.fadingEnemies.push({
+          ...w,
+          opacity: 1.0,
+          life: 1.0 // lasts 1 second
+        });
+      });
+
       this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
       this.score += 10;
       this.wordsDestroyed++;
@@ -197,6 +211,47 @@ export class GameEngine {
       return true;
     }
     return false;
+  }
+
+  spawnExplosion(x, y) {
+    const particleCount = 30 + Math.floor(Math.random() * 20);
+    for (let i = 0; i < particleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 80 + Math.random() * 350; // Increased speed (was 50-200)
+      const size = 3 + Math.random() * 5; // Slightly larger squares
+      const gray = Math.floor(Math.random() * 256);
+      
+      this.particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: size,
+        color: `rgb(${gray}, ${gray}, ${gray})`,
+        life: 0.8 + Math.random() * 1.2, // Increased life (was 0.5-1.0)
+        maxLife: 2.0
+      });
+    }
+  }
+
+  handleCanvasClick(e) {
+    if (!this.debugClickClear || this.gameState !== 'PLAYING' || this.isPaused) return;
+
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Check hit on any word
+    for (const w of this.words) {
+      const dx = x - w.x;
+      const dy = y - w.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 45) { // sprite size / 2 approximately
+        this.tryDestroyWord(w.text);
+        return; // handle only one per click
+      }
+    }
   }
 
   togglePause() {
@@ -281,6 +336,7 @@ export class GameEngine {
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
+    // Update active words
     for (let i = this.words.length - 1; i >= 0; i--) {
       const w = this.words[i];
       const dx = cx - w.x;
@@ -296,6 +352,29 @@ export class GameEngine {
         const ny = dy / dist;
         w.x += nx * w.speed * dt;
         w.y += ny * w.speed * dt;
+      }
+    }
+
+    // Update fading enemies
+    for (let i = this.fadingEnemies.length - 1; i >= 0; i--) {
+      const fe = this.fadingEnemies[i];
+      fe.life -= dt;
+      fe.opacity = Math.max(0, fe.life);
+      if (fe.life <= 0) {
+        this.fadingEnemies.splice(i, 1);
+      }
+    }
+
+    // Update particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.95; // friction
+      p.vy *= 0.95;
+      p.life -= dt;
+      if (p.life <= 0) {
+        this.particles.splice(i, 1);
       }
     }
   }
@@ -378,6 +457,28 @@ export class GameEngine {
         this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 25);
       }
     }
+
+    // Draw Fading Enemies
+    for (const fe of this.fadingEnemies) {
+      this.ctx.globalAlpha = fe.opacity;
+      const spriteSize = 90;
+      this.ctx.drawImage(
+        this.enemySprites[fe.enemySpriteIndex],
+        fe.x - spriteSize / 2,
+        fe.y - spriteSize / 2,
+        spriteSize,
+        spriteSize
+      );
+      this.ctx.globalAlpha = 1.0;
+    }
+
+    // Draw Particles (Squares)
+    for (const p of this.particles) {
+      this.ctx.fillStyle = p.color;
+      this.ctx.globalAlpha = Math.min(1, p.life * 1.5);
+      this.ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    }
+    this.ctx.globalAlpha = 1.0;
 
     // Reset shadow for next frame
     this.ctx.shadowBlur = 0;
