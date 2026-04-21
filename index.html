@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sketch your way to victory in draw defense, a semantic arcade survival game where your drawings are your weapons. Powered by a redundant VLM intelligence system (Groq & Qwen), your sketches are analyzed in real-time to neutralize incoming threats. Built with Vanilla JS and Vite." />
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,7 +88,7 @@
       <button id="lvl2Btn" disabled>stage 3: advanced objects</button>
     </div>
     <button id="backToMenuBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Back to Menu</button>
-    
+
     <div class="marquee bottom-marquee">
       <div class="marquee-content">
         <!-- Set 1 -->
@@ -110,7 +111,7 @@
         <img src="./src/assets/enemy07.png" alt="ufo" />
       </div>
     </div>
-    
+
     <button id="debugUnlockBtn"
       style="position: absolute; bottom: 20px; left: 50px; font-size: 14px; padding: 8px 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 6px; cursor: pointer; transition: 0.2s; display: none;">Unlock
       All (Debug)</button>
@@ -120,7 +121,7 @@
   <div id="settings-modal" class="hidden">
     <div class="modal-content">
       <h1 class="title">settings</h1>
-      
+
       <div class="setting-row">
         <span>Galaxy Mode</span>
         <button id="modalThemeToggleBtn" class="control-btn">OFF</button>
@@ -130,12 +131,12 @@
         <span>Dev Mode</span>
         <button id="modalDevToggleBtn" class="control-btn">LOCKED</button>
       </div>
-      
+
       <div class="setting-row">
         <span>VLM Provider</span>
         <button id="modalVlmToggleBtn" class="control-btn">GROQ</button>
       </div>
-      
+
       <div class="setting-row">
         <div class="setting-label">
           <span>Clear Key</span>
@@ -143,7 +144,7 @@
         </div>
         <button id="cfgClearKeyBtn" class="control-btn">C</button>
       </div>
-      
+
       <button id="closeSettingsBtn" class="control-btn main-close">Close Settings</button>
     </div>
   </div>

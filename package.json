@@ -1,6 +1,7 @@
 {
   "name": "drawdefense",
-  "version": "0.0.0",
+  "version": "1.1.0",
+  "description": "Sketch your way to victory in draw defense, a semantic arcade survival game where your drawings are your weapons. Powered by a redundant VLM intelligence system (Groq & Qwen), your sketches are analyzed in real-time to neutralize incoming threats. Built with Vanilla JS and Vite.",
   "private": true,
   "type": "module",
   "scripts": {
