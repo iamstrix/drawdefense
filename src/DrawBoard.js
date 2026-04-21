@@ -45,7 +45,7 @@ export class DrawBoard {
   }
 
   fillBackground() {
-    this.ctx.fillStyle = "#ffffff"; // DoodleNet expects white background and black stroke
+    this.ctx.fillStyle = "#ffffff"; // VLM standard: white background and black stroke for optimal contrast
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -104,14 +104,14 @@ export class DrawBoard {
   applyStyle() {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
 
-    // Note: To make sure DoodleNet predicts correctly, we actually want the internal 
-    // canvas state to theoretically match DoodleNet training. But ml5 takes the canvas as is.
+    // Note: To ensure optimal VLM recognition, the canvas state should 
+    // maintain high contrast and clear stroke paths.
     // However, if we invert colors for Galaxy theme, prediction might fail.
     // For reliable prediction, we'll draw visibly according to theme, but 
     // wait - if we invert colors, ML might get confused. 
     // It's safer to always keep standard colors on an off-screen canvas if we do styling.
     // But for simplicity, we'll draw black on white in both modes, just applying a CSS filter for galaxy theme, 
-    // OR we can rely on DoodleNet being somewhat robust.
+    // We draw visibly according to theme, but maintain a clean signal for the VLM.
     // Let's use black line on white bg for actual drawing, but CSS filter `invert(1)` on the canvas wrapper or keep standard drawing here and add glowing shadows.
     // For now, let's just make Galaxy drawing a black line with glowing cyan shadow!
     this.ctx.lineCap = 'round';

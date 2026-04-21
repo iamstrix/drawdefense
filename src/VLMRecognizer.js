@@ -79,17 +79,9 @@ export class VLMRecognizer {
         return;
       }
 
-      // OpenAI payload returns: { choices: [{ message: { content: "apple" } }] }
       let predictedWord = 'unknown';
-
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
         predictedWord = data.choices[0].message.content.trim().toLowerCase();
-      } else if (Array.isArray(data) && data.length > 0 && data[0].answer) { // fallback for legacy
-        predictedWord = data[0].answer.trim().toLowerCase();
-      } else if (typeof data === 'string') {
-        predictedWord = data.trim().toLowerCase();
-      } else if (data.answer) {
-        predictedWord = data.answer.trim().toLowerCase();
       }
 
       // Remove punctuation that the model might add (like "apple." or "apple!")
