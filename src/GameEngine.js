@@ -79,9 +79,8 @@ export class GameEngine {
 
     // Load background
     this.backgroundImage = new Image();
-    this.backgroundImage.src = './src/assets/l1.png';
     this.backgroundLoaded = false;
-    this.backgroundImage.onload = () => { this.backgroundLoaded = true; };
+    this.updateBackground();
 
     // Resize handler
     window.addEventListener('resize', () => this.resize());
@@ -89,6 +88,13 @@ export class GameEngine {
 
     // Start loop
     requestAnimationFrame((t) => this.loop(t));
+  }
+
+  updateBackground() {
+    this.backgroundLoaded = false;
+    const level = (this.gameMode === 'STORY') ? (this.storyStage + 1) : 1;
+    this.backgroundImage.src = `./src/assets/l${level}.png`;
+    this.backgroundImage.onload = () => { this.backgroundLoaded = true; };
   }
 
   resize() {
@@ -129,6 +135,7 @@ export class GameEngine {
       this.targetWords = Infinity;
       this.spawnInterval = 5000;
     }
+    this.updateBackground();
     this.spawnTimer = this.spawnInterval;
   }
 
@@ -153,6 +160,7 @@ export class GameEngine {
     }
     this.healthEl.innerText = this.health;
     if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords;
+    this.updateBackground();
     this.spawnTimer = this.spawnInterval;
   }
 
@@ -194,7 +202,7 @@ export class GameEngine {
       this.score += 10;
       this.wordsDestroyed++;
       this.scoreEl.innerText = this.score;
-      this.attackTimer = 0.5; // Ported from sprites branch
+      this.attackTimer = 0.5; 
       return true;
     }
     return false;
@@ -389,7 +397,7 @@ export class GameEngine {
         this.ctx.drawImage(currentSprite, w.x - spriteSize/2, w.y - spriteSize/2, spriteSize, spriteSize);
       }
 
-      // Text Box Logic (from sprites branch)
+      // Text Box Logic
       this.ctx.font = 'bold 16px Outfit, sans-serif';
       const textWidth = this.ctx.measureText(w.text).width;
       const padding = 4;
