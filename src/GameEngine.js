@@ -33,22 +33,48 @@ export class GameEngine {
       this.playerSpriteLoaded = true;
     };
     
-    // Load enemy sprites
+    // Load attack sprite
+    this.attackSprite = new Image();
+    this.attackSprite.src = './src/assets/cat_attack.png';
+    this.attackSpriteLoaded = false;
+    this.attackSprite.onload = () => {
+      this.attackSpriteLoaded = true;
+    };
+    
+    // Load explosion sprite
+    this.explosionSprite = new Image();
+    this.explosionSprite.src = './src/assets/explode.png';
+    this.explosionSpriteLoaded = false;
+    this.explosionSprite.onload = () => {
+      this.explosionSpriteLoaded = true;
+    };
+    
+    this.attackTimer = 0;
+    
+    // Load enemy sprites (2 frames per enemy)
     this.enemySprites = [];
     this.enemySpritesLoaded = 0;
-    const totalEnemies = 6;
+    const totalEnemies = 3;
     for (let i = 1; i <= totalEnemies; i++) {
-      const enemyImg = new Image();
-      enemyImg.src = `./src/assets/enemy${i.toString().padStart(2, '0')}.png`;
-      enemyImg.onload = () => {
+      const enemyImg1 = new Image();
+      enemyImg1.src = `./src/assets/enemy${i.toString().padStart(2, '0')}.png`;
+      enemyImg1.onload = () => {
         this.enemySpritesLoaded++;
       };
-      this.enemySprites.push(enemyImg);
+      
+      const enemyImg2 = new Image();
+      const frame2Name = i === 1 ? 'enemy1_.png' : `enemy${i.toString().padStart(2, '0')}_.png`;
+      enemyImg2.src = `./src/assets/${frame2Name}`;
+      enemyImg2.onload = () => {
+        this.enemySpritesLoaded++;
+      };
+      
+      this.enemySprites.push([enemyImg1, enemyImg2]);
     }
     
     // Load background image
     this.backgroundImage = new Image();
-    this.backgroundImage.src = './src/assets/l2.png';
+    this.backgroundImage.src = './src/assets/l1.png';
     this.backgroundLoaded = false;
     this.backgroundImage.onload = () => {
       this.backgroundLoaded = true;
@@ -71,7 +97,7 @@ export class GameEngine {
   
   spawnWord() {
     const wordText = DOODLE_CLASSES[Math.floor(Math.random() * DOODLE_CLASSES.length)];
-    const enemyIndex = Math.floor(Math.random() * 6);
+    const enemyIndex = Math.floor(Math.random() * 3);
     
     // Spawn enemy from perimeter
     const side = Math.floor(Math.random() * 4);
@@ -94,18 +120,30 @@ export class GameEngine {
       text: wordText,
       x: startX,
       y: startY,
-      speed: 100 + Math.random() * 15,
+      speed: 30 + Math.random() * 15,
       enemySpriteIndex: enemyIndex,
-      isEnemy: true
+      isEnemy: true,
+      animationTimer: 0,
+      animationFrame: 0,
+      dying: false,
+      fadeTimer: 0
     });
   }
   
   tryDestroyWord(predictedLabel) {
-    const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
+    const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase() && !w.dying);
     if (matchingWords.length > 0) {
-      this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
+      // Mark enemies as dying
+      this.words.forEach(w => {
+        if (w.text.toLowerCase() === predictedLabel.toLowerCase() && !w.dying) {
+          w.dying = true;
+          w.fadeTimer = 0.5; // fade over 0.5 seconds
+        }
+      });
       this.score += 10;
       this.scoreEl.innerText = this.score;
+      // Trigger attack animation
+      this.attackTimer = 1;
       return true;
     }
     return false;
@@ -139,26 +177,46 @@ export class GameEngine {
     this.damageTimer = Math.max(0, this.damageTimer - dt);
     this.damageElapsed += dt;
     
+    // Update attack timer
+    this.attackTimer = Math.max(0, this.attackTimer - dt);
+    
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
     
     for (let i = this.words.length - 1; i >= 0; i--) {
       const w = this.words[i];
-      const dx = cx - w.x;
-      const dy = cy - w.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
       
-      if (dist < 120) { // reached player
-        this.words.splice(i, 1);
-        this.health -= 1;
-        this.healthEl.innerText = this.health;
-        this.damageTimer = 0.125;
-        this.damageElapsed = 0.125;
+      if (w.dying) {
+        // Update fade timer
+        w.fadeTimer -= dt;
+        if (w.fadeTimer <= 0) {
+          this.words.splice(i, 1);
+          continue;
+        }
       } else {
-        const nx = dx / dist;
-        const ny = dy / dist;
-        w.x += nx * w.speed * dt;
-        w.y += ny * w.speed * dt;
+        // Update enemy animation
+        w.animationTimer += dt;
+        if (w.animationTimer >= 1.0) {
+          w.animationTimer = 0;
+          w.animationFrame = 1 - w.animationFrame;
+        }
+        
+        const dx = cx - w.x;
+        const dy = cy - w.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist < 100) { // reached player
+          this.words.splice(i, 1);
+          this.health -= 1;
+          this.healthEl.innerText = this.health;
+          this.damageTimer = 0.125;
+          this.damageElapsed = 0.125;
+        } else {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          w.x += nx * w.speed * dt;
+          w.y += ny * w.speed * dt;
+        }
       }
     }
   }
@@ -180,14 +238,16 @@ export class GameEngine {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     
     // Draw Player (Center Base)
-    if (this.playerSpriteLoaded) {
+    const currentPlayerSprite = (this.attackTimer > 0 && this.attackSpriteLoaded) ? this.attackSprite : this.playerSprite;
+    const playerLoaded = (this.attackTimer > 0) ? this.attackSpriteLoaded : this.playerSpriteLoaded;
+    if (playerLoaded) {
       const spriteSize = 200; // Adjust size as needed
       if (this.damageTimer > 0) {
         const pulse = Math.sin(this.damageElapsed * 20) * 0.5 + 0.5;
         this.ctx.filter = `sepia(${0.5 + pulse * 0.5}) hue-rotate(${-25 - pulse * 25}deg) saturate(${3 + pulse * 2}) brightness(1)`;
       }
       this.ctx.drawImage(
-        this.playerSprite,
+        currentPlayerSprite,
         cx - spriteSize / 2,
         cy - spriteSize / 2,
         spriteSize,
@@ -219,42 +279,85 @@ export class GameEngine {
     }
     
     // Draw Words and Enemies
-    this.ctx.font = 'bold 12px Outfit, sans-serif';
+    this.ctx.font = 'bold 16px Outfit, sans-serif';
     this.ctx.fillStyle = '#fff';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     
     for (const w of this.words) {
       if (w.isEnemy) {
+        // Set alpha for dying enemies
+        if (w.dying) {
+          this.ctx.globalAlpha = w.fadeTimer / 0.5;
+        }
+        
         // Draw enemy sprite
-        const spriteSize = 100;
-        this.ctx.drawImage(
-          this.enemySprites[w.enemySpriteIndex],
-          w.x - spriteSize / 2,
-          w.y - spriteSize / 2,
-          spriteSize,
-          spriteSize
-        );
+        const spriteSize = 60;
+        if (w.dying) {
+          // Draw explosion sprite for dying enemies
+          if (this.explosionSpriteLoaded) {
+            this.ctx.drawImage(
+              this.explosionSprite,
+              w.x - spriteSize / 2,
+              w.y - spriteSize / 2,
+              spriteSize,
+              spriteSize
+            );
+          }
+        } else {
+          // Draw normal enemy sprite
+          const currentSprite = this.enemySprites[w.enemySpriteIndex][w.animationFrame];
+          if (currentSprite.complete && currentSprite.naturalWidth > 0) {
+            this.ctx.drawImage(
+              currentSprite,
+              w.x - spriteSize / 2,
+              w.y - spriteSize / 2,
+              spriteSize,
+              spriteSize
+            );
+          }
+        }
         
         // Draw word text above the sprite
-        this.ctx.font = 'bold 12px Outfit, sans-serif';
+        this.ctx.font = 'bold 16px Outfit, sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
+        
+        // Measure text for background box
+        const textMetrics = this.ctx.measureText(w.text);
+        const textWidth = textMetrics.width;
+        const fontSize = 16;
+        const padding = 4;
+        const boxWidth = textWidth + 2 * padding;
+        const boxHeight = fontSize + 2 * padding;
+        const textX = w.x;
+        const textY = w.y - spriteSize / 2 - 20;
+        const boxX = textX - boxWidth / 2;
+        const boxY = textY - boxHeight / 2;
+        
+        // Draw white background box
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        
+        // Draw black text
+        this.ctx.fillStyle = '#000';
         if (themeGalaxy) {
-          this.ctx.fillStyle = '#fff';
           this.ctx.shadowBlur = 10;
           this.ctx.shadowColor = accentColor;
         } else {
-          this.ctx.fillStyle = textColor;
           this.ctx.shadowBlur = 0;
         }
-        this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 20);
+        this.ctx.fillText(w.text, textX, textY);
+        
+        // Reset alpha
+        this.ctx.globalAlpha = 1;
       }
     }
     
     // Reset filter and shadow for next frame
     this.ctx.filter = 'none';
     this.ctx.shadowBlur = 0;
+    this.ctx.globalAlpha = 1;
   }
   
   drawGameOver() {
