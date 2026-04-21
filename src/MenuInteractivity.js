@@ -96,7 +96,8 @@ export class MenuInteractivity {
       canvas: offscreen,
       x: minX - padding,
       y: minY - padding,
-      vx: -1.5 - Math.random() * 3, // Go left
+      vx: (Math.random() - 0.5) * 5, // Random drift
+      vy: (Math.random() - 0.5) * 5,
       rotation: 0,
       rv: (Math.random() - 0.5) * 0.05, // constant rotation
       opacity: 0.8
@@ -117,11 +118,19 @@ export class MenuInteractivity {
     for (let i = this.doodles.length - 1; i >= 0; i--) {
       const d = this.doodles[i];
       d.x += d.vx;
+      d.y = (d.y || 0) + d.vy;
       d.rotation += d.rv;
       
-      // If off screen left
-      if (d.x + d.canvas.width < -100) {
-        this.doodles.splice(i, 1);
+      // Bounce off Left/Right
+      if (d.x <= 0 || d.x + d.canvas.width >= window.innerWidth) {
+        d.vx *= -1;
+        d.x = Math.max(0, Math.min(d.x, window.innerWidth - d.canvas.width));
+      }
+      
+      // Bounce off Top/Bottom
+      if (d.y <= 0 || d.y + d.canvas.height >= window.innerHeight) {
+        d.vy *= -1;
+        d.y = Math.max(0, Math.min(d.y, window.innerHeight - d.canvas.height));
       }
     }
   }
