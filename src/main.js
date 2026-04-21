@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pauseBtn.addEventListener('click', () => {
     gameEngine.togglePause();
     pauseBtn.innerText = gameEngine.isPaused ? "Resume" : "Pause";
+    drawBoard.setPaused(gameEngine.isPaused);
   });
 
   quitBtn.addEventListener('click', () => {

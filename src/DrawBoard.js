@@ -60,6 +60,7 @@ export class DrawBoard {
   }
 
   startDraw(e) {
+    if (this.gameEngine && this.gameEngine.isPaused) return;
     if (!this.recognizer.isReady) {
       this.predictionOutput.innerText = 'API Key Missing!';
       return;
@@ -139,6 +140,19 @@ export class DrawBoard {
       this.applyStyle();
       this.ctx.stroke();
     });
+  }
+
+  setPaused(isPaused) {
+    this.redrawAll();
+    if (isPaused) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = 'bold 48px Outfit, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2);
+    }
   }
 
   predict() {
