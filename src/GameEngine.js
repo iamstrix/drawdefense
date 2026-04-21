@@ -192,15 +192,21 @@ export class GameEngine {
       isEnemy: true,
       enemySpriteIndex: enemyIndex,
       animationTimer: 0,
-      animationFrame: 0
+      animationFrame: 0,
+      spawnTime: Date.now() + Math.random() // Tiny random to prevent exact same ms collision
     });
     this.wordsSpawned++;
     if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
   }
 
   tryDestroyWord(predictedLabel, sketchImage) {
-    // Find first matching word that isn't already being targeted by a projectile
-    const targetWord = this.words.find(w => w.text.toLowerCase() === predictedLabel.toLowerCase() && !w.isTargeted);
+    // Chronological priority: Target the oldest spawned entity first
+    // Filter for matches, then sort by spawnTime, then take the first one that isn't already targeted
+    const matchingWords = this.words
+      .filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase() && !w.isTargeted)
+      .sort((a, b) => a.spawnTime - b.spawnTime);
+    
+    const targetWord = matchingWords[0];
     
     if (targetWord) {
       targetWord.isTargeted = true;
