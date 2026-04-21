@@ -1,96 +1,87 @@
 export class VLMRecognizer {
-  constructor(apiKey) {
-    this.apiKey = apiKey; // kept for validation check only; actual injection is done server-side via vite proxy
-    // Route via local Groq proxy: /api/groq → https://api-groq.com
-    this.apiUrl = `/api/groq/openai/v1/chat/completions`;
-    this.modelId = `meta-llama/llama-4-scout-17b-16e-instruct`;
-    this.isReady = !!this.apiKey && !this.apiKey.includes('gsk_...');
+  constructor({ groqKey, hfKey }) {
+    this.keys = {
+      groq: groqKey,
+      hf: hfKey
+    };
+    this.currentProvider = 'groq';
+    this.isReady = !!(this.keys.groq || this.keys.hf);
 
-    if (!this.isReady) {
-      console.warn('[VLM] Groq API Key missing or placeholder. Open .env and set VITE_GROQ_API_KEY=gsk_...');
-    } else {
-      console.log('[VLM] VLMRecognizer initialized with Groq Llama 4 Scout');
+    this.providers = {
+      groq: {
+        name: 'Groq',
+        apiUrl: `/api/groq/openai/v1/chat/completions`,
+        modelId: `meta-llama/llama-4-scout-17b-16e-instruct`,
+        key: this.keys.groq
+      },
+      qwen: {
+        name: 'Qwen (HF)',
+        apiUrl: `https://router.huggingface.co/v1/chat/completions`,
+        modelId: `Qwen/Qwen3-VL-8B-Instruct`,
+        key: this.keys.hf
+      }
+    };
+
+    console.log('[VLM] Redundant VLM System Initialized. Primary:', this.currentProvider);
+  }
+
+  setProvider(providerId) {
+    if (this.providers[providerId]) {
+      this.currentProvider = providerId;
+      console.log(`[VLM] Provider switched to: ${this.providers[providerId].name}`);
     }
   }
 
-  async classify(base64Image, activeWords, callback) {
-    if (!this.isReady) {
-      console.error('[VLM] Cannot classify without a valid API key');
-      if (callback) callback({ error: 'No API key' });
-      return;
+  async classify(base64Image, activeWords, callback, isFallback = false) {
+    const providerId = this.currentProvider;
+    const config = this.providers[providerId];
+
+    if (!config.key) {
+      console.warn(`[VLM] Key missing for ${config.name}. Attempting fallback...`);
+      return this.fallback(base64Image, activeWords, callback);
     }
 
-    // Ensure we keep the full data URI (OpenAI format needs data:image/...;base64,...)
-    // Prompt engineering: Balance being forgiving of crude drawings while still rejecting total nonsense.
-    const question = `Target words: ${activeWords.join(', ')}. Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, a random scribble, or a single line, output ONLY 'none'`;
+    const question = providerId === 'groq' 
+      ? `Target words: ${activeWords.join(', ')}. Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, output ONLY 'none'`
+      : `Which of these words best describes this sketch: ${activeWords.join(', ')}? Respond with ONLY the single matching word.`;
 
-    // Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, a random scribble, or a single line, output ONLY 'none'.
-    console.log('[VLM] Question sent:', question);
-
-    const payload = {
-      model: this.modelId,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: question },
-            {
-              type: "image_url",
-              image_url: { url: base64Image }
-            }
-          ]
-        }
-      ],
-      max_tokens: 20
-    };
+    console.log(`[VLM] [${config.name}] Classifying...`);
 
     try {
-      const response = await fetch(this.apiUrl, {
+      const response = await fetch(config.apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          'Authorization': `Bearer ${config.key}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          model: config.modelId,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: question },
+              { type: "image_url", image_url: { url: base64Image } }
+            ]
+          }],
+          max_tokens: 20
+        })
       });
 
-      if (response.status === 503) {
-        // Model is loading — HF cold-start
-        console.log('[VLM] Model loading (503). Retrying in 5 seconds...');
-        setTimeout(() => this.classify(base64Image, activeWords, callback), 5000);
-        return;
-      }
-
-      const rawText = await response.text();
-      console.log('[VLM] Raw response status:', response.status, '| body:', rawText.slice(0, 200));
-
       if (!response.ok) {
-        console.error(`[VLM] HTTP error ${response.status}:`, rawText);
-        if (callback) callback({ error: `HTTP ${response.status}: ${rawText}` });
-        return;
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (parseErr) {
-        console.error('[VLM] JSON parse failed:', parseErr, rawText);
-        if (callback) callback({ error: 'Invalid JSON response' });
-        return;
-      }
-
+      const data = await response.json();
       let predictedWord = 'unknown';
-      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+
+      if (data.choices && data.choices[0]?.message) {
         predictedWord = data.choices[0].message.content.trim().toLowerCase();
       }
 
-      // Remove punctuation that the model might add (like "apple." or "apple!")
       predictedWord = predictedWord.replace(/[.,!?]$/g, '');
+      console.log(`[VLM] [${config.name}] Result:`, predictedWord);
 
-      console.log('[VLM] Predicted:', predictedWord);
-
-      // Try fuzzy-matching: see if the predicted word is contained in or contains an active word
-      // This handles cases where the model says "an apple" and the word is "apple"
+      // Fuzzy Match
       let matchedWord = predictedWord;
       for (const w of activeWords) {
         if (predictedWord.includes(w.toLowerCase()) || w.toLowerCase().includes(predictedWord)) {
@@ -102,8 +93,29 @@ export class VLMRecognizer {
       if (callback) callback({ topLabels: [matchedWord] });
 
     } catch (err) {
-      console.error('[VLM] Fetch exception:', err);
-      if (callback) callback({ error: err.toString() });
+      console.error(`[VLM] [${config.name}] Failed:`, err);
+      
+      // FALLBACK LOGIC
+      if (!isFallback) {
+        console.warn(`[VLM] Primary provider failed. Falling back to Qwen...`);
+        return this.fallback(base64Image, activeWords, callback);
+      } else {
+        if (callback) callback({ error: 'All providers failed' });
+      }
     }
+  }
+
+  async fallback(base64Image, activeWords, callback) {
+    // If we were on groq, try qwen. If already on qwen, we are out of luck.
+    const fallbackProvider = (this.currentProvider === 'groq') ? 'qwen' : 'groq';
+    
+    // Temporarily switch provider to Qwen for this call
+    const originalProvider = this.currentProvider;
+    this.currentProvider = fallbackProvider;
+    
+    await this.classify(base64Image, activeWords, callback, true);
+    
+    // Restore original preference
+    this.currentProvider = originalProvider;
   }
 }

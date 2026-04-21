@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeSettingsBtn = document.getElementById('closeSettingsBtn');
   const cfgClearKeyBtn = document.getElementById('cfgClearKeyBtn');
   const modalDevToggleBtn = document.getElementById('modalDevToggleBtn');
+  const modalVlmToggleBtn = document.getElementById('modalVlmToggleBtn');
   
   let clearKey = 'c';
   let isConfiguringKey = false;
@@ -126,6 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsModal.classList.add('hidden');
     isConfiguringKey = false;
     cfgClearKeyBtn.innerText = clearKey.toUpperCase();
+  });
+
+  modalVlmToggleBtn.addEventListener('click', () => {
+    const current = drawBoard.recognizer.currentProvider;
+    const next = (current === 'groq') ? 'qwen' : 'groq';
+    drawBoard.recognizer.setProvider(next);
+    modalVlmToggleBtn.innerText = next.toUpperCase();
   });
 
   function updateDevModeUI() {
