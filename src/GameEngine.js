@@ -364,7 +364,7 @@ export class GameEngine {
         );
 
         // Draw word text above the sprite
-        this.ctx.font = 'bold 14px Outfit, sans-serif';
+        this.ctx.font = 'bold 18px Outfit, sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         if (themeGalaxy) {
