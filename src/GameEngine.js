@@ -254,7 +254,26 @@ export class GameEngine {
     for (const w of this.words) {
       const dist = Math.sqrt((x - w.x)**2 + (y - w.y)**2);
       if (dist < 45) {
-        this.tryDestroyWord(w.text);
+        // Create 'dev' projectile image
+        const devCanvas = document.createElement('canvas');
+        devCanvas.width = 200;
+        devCanvas.height = 200;
+        const dctx = devCanvas.getContext('2d');
+        const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
+        
+        dctx.font = 'bold 64px Outfit, sans-serif';
+        dctx.textAlign = 'center';
+        dctx.textBaseline = 'middle';
+        dctx.fillStyle = themeGalaxy ? '#00f3ff' : '#000000';
+        
+        if (themeGalaxy) {
+          dctx.shadowBlur = 20;
+          dctx.shadowColor = '#00f3ff';
+        }
+        
+        dctx.fillText('dev', 100, 100);
+        
+        this.tryDestroyWord(w.text, devCanvas);
         return;
       }
     }
