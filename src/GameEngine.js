@@ -319,8 +319,11 @@ export class GameEngine {
 
     // Update player idle animation
     if (this.attackTimer <= 0) {
+      // Dynamic speed: Base 1000ms, -100ms per enemy, min 100ms
+      const animInterval = Math.max(0.1, 1.0 - (this.words.length * 0.1));
+      
       this.playerIdleTimer += dt;
-      if (this.playerIdleTimer >= 0.5) {
+      if (this.playerIdleTimer >= animInterval) {
         this.playerIdleTimer = 0;
         this.playerAnimationFrame = 1 - this.playerAnimationFrame;
       }
