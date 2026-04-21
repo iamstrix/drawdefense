@@ -23,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextStageBtn = document.getElementById('nextStageBtn');
   const stageClearMenuBtn = document.getElementById('stageClearMenuBtn');
   
+  const centerControls = document.getElementById('centerControls');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const quitBtn = document.getElementById('quitBtn');
+  
   const storyBtn = document.getElementById('storyModeBtn');
   const endlessBtn = document.getElementById('endlessModeBtn');
   const backToMenuBtn = document.getElementById('backToMenuBtn');
@@ -54,6 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     mainMenu.classList.add('hidden');
     levelSelectMenu.classList.add('hidden');
     gameContainer.style.display = 'flex';
+    centerControls.style.display = 'flex';
+    pauseBtn.innerText = "Pause";
     gameEngine.startGame(mode, stage);
     
     // Resize canvases since they were display: none
@@ -84,6 +90,20 @@ document.addEventListener('DOMContentLoaded', () => {
     gameEngine.wordsSpawned = gameEngine.targetWords;
     gameEngine.words = [];
   });
+  
+  pauseBtn.addEventListener('click', () => {
+    gameEngine.togglePause();
+    pauseBtn.innerText = gameEngine.isPaused ? "Resume" : "Pause";
+  });
+
+  quitBtn.addEventListener('click', () => {
+    gameContainer.style.display = 'none';
+    centerControls.style.display = 'none';
+    hideStageClearMenu();
+    mainMenu.classList.remove('hidden');
+    gameEngine.gameState = 'MENU';
+    gameEngine.isPaused = false;
+  });
 
   // --- STAGE CLEAR MENU LOGIC ---
   function hideStageClearMenu() {
@@ -106,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
   stageClearMenuBtn.addEventListener('click', () => {
     hideStageClearMenu();
     gameContainer.style.display = 'none';
+    centerControls.style.display = 'none';
     showLevelSelect();
   });
 
@@ -113,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   gameEngine.canvas.addEventListener('click', () => {
     if (gameEngine.gameState === 'GAME_OVER' || gameEngine.gameState === 'WIN') {
       gameContainer.style.display = 'none';
+      centerControls.style.display = 'none';
       if (gameEngine.gameMode === 'STORY') {
         showLevelSelect();
       } else {

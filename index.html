@@ -13,12 +13,19 @@
   <body>
     <div id="ui-layer">
       <div class="stats">
+        <div id="levelContainer" style="display: none; font-weight: bold; font-size: 32px; margin-bottom: 12px;">Stage <span id="levelVal">1</span></div>
         <div id="wordsLeftContainer" style="display: none;">Incoming: <span id="wordsLeftVal">10</span></div>
         <div>Score: <span id="scoreVal">0</span></div>
         <div>Health: <span id="healthVal">10</span></div>
       </div>
       <div class="controls">
         <button id="themeToggleBtn">Galaxy Theme: OFF</button>
+      </div>
+      
+      <!-- Central Controls -->
+      <div id="centerControls" style="display: none; position: absolute; left: 50%; top: 20px; transform: translateX(-50%); z-index: 100; gap: 15px;">
+        <button id="pauseBtn" class="control-btn">Pause</button>
+        <button id="quitBtn" class="control-btn">Quit/Menu</button>
       </div>
     </div>
     

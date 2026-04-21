@@ -21,6 +21,8 @@ export class GameEngine {
     this.healthEl = document.getElementById('healthVal');
     this.wordsLeftEl = document.getElementById('wordsLeftVal');
     this.wordsLeftContainer = document.getElementById('wordsLeftContainer');
+    this.levelEl = document.getElementById('levelVal');
+    this.levelContainer = document.getElementById('levelContainer');
 
     this.words = [];
     this.spawnTimer = 0;
@@ -28,6 +30,7 @@ export class GameEngine {
 
     this.gameState = 'MENU'; // 'MENU', 'PLAYING', 'GAME_OVER', 'STAGE_CLEAR', 'WIN'
     this.gameMode = 'ENDLESS'; // 'ENDLESS', 'STORY'
+    this.isPaused = false;
     this.storyStage = 0;
     this.maxUnlockedStage = 0;
     this.wordsSpawned = 0;
@@ -92,11 +95,14 @@ export class GameEngine {
     this.wordsDestroyed = 0;
     this.scoreEl.innerText = this.score;
     this.healthEl.innerText = this.health;
+    this.isPaused = false;
     this.lastTime = performance.now();
 
     if (this.gameMode === 'STORY') {
       this.wordsLeftContainer.style.display = 'block';
+      this.levelContainer.style.display = 'block';
       this.storyStage = startStage;
+      this.levelEl.innerText = this.storyStage + 1;
       if (this.storyStage === 0) {
         this.targetWords = 10; // Stage 1
         this.spawnInterval = 6000;
@@ -110,6 +116,7 @@ export class GameEngine {
       this.wordsLeftEl.innerText = this.targetWords;
     } else {
       this.wordsLeftContainer.style.display = 'none';
+      this.levelContainer.style.display = 'none';
       this.targetWords = Infinity;
       this.spawnInterval = 5000;
     }
@@ -121,10 +128,12 @@ export class GameEngine {
   nextStage() {
     this.storyStage++;
     this.gameState = 'PLAYING';
+    this.isPaused = false;
     this.words = [];
     this.wordsSpawned = 0;
     this.wordsDestroyed = 0;
     this.lastTime = performance.now();
+    this.levelEl.innerText = this.storyStage + 1;
 
     if (this.storyStage === 1) {
       this.targetWords = 15; // Stage 2
@@ -190,9 +199,31 @@ export class GameEngine {
     return false;
   }
 
+  togglePause() {
+    if (this.gameState === 'PLAYING') {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) {
+        this.lastTime = performance.now(); // Avoid a huge dt jump after pausing
+      }
+    }
+  }
+
   loop(currentTime) {
     const dt = (currentTime - this.lastTime) / 1000; // delta time in seconds
     this.lastTime = currentTime;
+
+    if (this.isPaused) {
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillStyle = '#fff';
+      this.ctx.font = 'bold 48px Outfit, sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2);
+      this.lastTime = currentTime;
+      requestAnimationFrame((t) => this.loop(t));
+      return;
+    }
 
     if (this.gameState === 'MENU') {
       requestAnimationFrame((t) => this.loop(t));

@@ -197,6 +197,32 @@ body::before {
   filter: grayscale(100%);
 }
 
+.control-btn {
+  pointer-events: auto;
+  font-family: var(--font-family);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+:root.theme-galaxy .control-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 10px var(--accent-color);
+  text-shadow: 0 0 5px var(--accent-color);
+}
+
+.control-btn:hover {
+  transform: scale(1.05);
+}
+
 /* Canvas styling */
 canvas {
   background-color: var(--canvas-bg);
