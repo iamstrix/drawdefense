@@ -50,15 +50,32 @@ export class GameEngine {
     this.attackTimer = 0;
 
     // Load player sprites
-    this.playerSprite = new Image();
-    this.playerSprite.src = './src/assets/cat.png';
-    this.playerSpriteLoaded = false;
-    this.playerSprite.onload = () => { this.playerSpriteLoaded = true; };
+    this.playerSprites = [];
+    this.playerSpritesLoaded = 0;
+    const playerImg1 = new Image();
+    playerImg1.src = './src/assets/cat.png';
+    playerImg1.onload = () => { this.playerSpritesLoaded++; };
+    
+    const playerImg2 = new Image();
+    playerImg2.src = './src/assets/cat_.png';
+    playerImg2.onload = () => { this.playerSpritesLoaded++; };
+    
+    this.playerSprites = [playerImg1, playerImg2];
+
+    this.playerAnimationTimer = 0;
+    this.playerAnimationFrame = 0;
 
     this.attackSprite = new Image();
     this.attackSprite.src = './src/assets/cat_attack.png';
     this.attackSpriteLoaded = false;
     this.attackSprite.onload = () => { this.attackSpriteLoaded = true; };
+
+    this.clearedSprite = new Image();
+    this.clearedSprite.src = './src/assets/cat_cleared.png';
+    this.clearedSpriteLoaded = false;
+    this.clearedSprite.onload = () => { this.clearedSpriteLoaded = true; };
+
+    this.stageClearTimer = 0;
 
     // Load enemy sprites (2 frames per enemy)
     this.enemySprites = [];
@@ -263,7 +280,17 @@ export class GameEngine {
       return;
     }
 
-    if (this.gameState === 'MENU' || this.gameState === 'STAGE_CLEAR') {
+    if (this.gameState === 'MENU' || this.gameState === 'STAGE_CLEAR' || this.gameState === 'STAGE_CLEARING') {
+      if (this.gameState === 'STAGE_CLEARING') {
+        this.update(dt);
+        this.stageClearTimer -= dt;
+        if (this.stageClearTimer <= 0) {
+          this.gameState = 'STAGE_CLEAR';
+          this.maxUnlockedStage = Math.max(this.maxUnlockedStage, this.storyStage + 1);
+          if (this.onStageClear) this.onStageClear(this.wordsDestroyed);
+        }
+      }
+      this.draw();
       requestAnimationFrame((t) => this.loop(t));
       return;
     }
@@ -283,9 +310,8 @@ export class GameEngine {
 
     if (this.gameMode === 'STORY' && this.wordsSpawned >= this.targetWords && this.words.length === 0) {
       if (this.storyStage < 2) {
-        this.gameState = 'STAGE_CLEAR';
-        this.maxUnlockedStage = Math.max(this.maxUnlockedStage, this.storyStage + 1);
-        if (this.onStageClear) this.onStageClear(this.wordsDestroyed);
+        this.gameState = 'STAGE_CLEARING';
+        this.stageClearTimer = 2.0;
       } else {
         this.gameState = 'WIN';
       }
@@ -309,6 +335,13 @@ export class GameEngine {
     this.damageTimer = Math.max(0, this.damageTimer - dt);
     this.damageElapsed += dt;
     this.attackTimer = Math.max(0, this.attackTimer - dt);
+
+    // Update player animation
+    this.playerAnimationTimer += dt;
+    if (this.playerAnimationTimer >= 1.0) {
+      this.playerAnimationTimer = 0;
+      this.playerAnimationFrame = 1 - this.playerAnimationFrame;
+    }
 
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
@@ -362,6 +395,22 @@ export class GameEngine {
   }
 
   draw() {
+    if (this.gameState === 'STAGE_CLEARING') {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      const cx = this.canvas.width / 2;
+      const cy = this.canvas.height / 2;
+
+      if (this.backgroundLoaded) {
+        this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      if (this.clearedSpriteLoaded) {
+        const spriteSize = 120;
+        this.ctx.drawImage(this.clearedSprite, cx - spriteSize / 2, cy - spriteSize / 2, spriteSize, spriteSize);
+      }
+      return;
+    }
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
@@ -376,8 +425,8 @@ export class GameEngine {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
 
     // Draw Player
-    const currentPlayerSprite = (this.attackTimer > 0 && this.attackSpriteLoaded) ? this.attackSprite : this.playerSprite;
-    const playerLoaded = (this.attackTimer > 0) ? this.attackSpriteLoaded : this.playerSpriteLoaded;
+    const currentPlayerSprite = (this.attackTimer > 0 && this.attackSpriteLoaded) ? this.attackSprite : this.playerSprites[this.playerAnimationFrame];
+    const playerLoaded = (this.attackTimer > 0) ? this.attackSpriteLoaded : (this.playerSpritesLoaded === 2);
     
     if (playerLoaded) {
       const spriteSize = 120;
