@@ -2,7 +2,8 @@
 
 **draw defense** is a fast-paced, VLM-powered arcade game where your sketches are your shield. Defend your base by drawing symbols that match incoming word-entities, neutralized by a cutting-edge Vision Language Model (VLM) for real-time recognition.
 
-![Image description](file:///c:/dev/Antigravity/drawdefense/src/assets/cat.png)
+<img width="309" height="312" alt="cat" src="https://github.com/user-attachments/assets/e564b96f-c0b1-49f9-bd09-8d185d468857" />
+
 
 ## 🌟 Key Features
 
