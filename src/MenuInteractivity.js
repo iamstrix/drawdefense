@@ -12,9 +12,10 @@ export class MenuInteractivity {
     window.addEventListener('resize', () => this.resize());
     
     this.canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
-    this.canvas.addEventListener('pointermove', (e) => this.draw(e));
-    this.canvas.addEventListener('pointerup', (e) => this.endDraw(e));
-    this.canvas.addEventListener('pointerleave', (e) => this.endDraw(e));
+    
+    // Bind methods for dynamic window listeners
+    this._onPointerMove = this.draw.bind(this);
+    this._onPointerUp = this.endDraw.bind(this);
     
     this.loop();
   }
@@ -23,14 +24,17 @@ export class MenuInteractivity {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
   }
-  
+
   startDraw(e) {
-    // Only allow drawing if clicking the background (not UI)
+    // PREVENT drawing if clicking a button or title (anything with auto pointer-events)
     if (e.target !== this.canvas) return;
     
     this.isDrawing = true;
     const pos = {x: e.clientX, y: e.clientY};
     this.currentStroke = [pos];
+
+    window.addEventListener('pointermove', this._onPointerMove);
+    window.addEventListener('pointerup', this._onPointerUp);
   }
   
   draw(e) {
@@ -43,12 +47,14 @@ export class MenuInteractivity {
     if (!this.isDrawing) return;
     this.isDrawing = false;
     
+    window.removeEventListener('pointermove', this._onPointerMove);
+    window.removeEventListener('pointerup', this._onPointerUp);
+
     if (this.currentStroke.length < 5) {
       this.currentStroke = [];
       return;
     }
     
-    // Snapshot and Marquee
     this.createDoodle(this.currentStroke);
     this.currentStroke = [];
   }

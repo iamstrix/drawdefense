@@ -25,6 +25,7 @@ export class GameEngine {
     this.levelContainer = document.getElementById('levelContainer');
 
     this.words = [];
+    this.projectiles = [];
     this.particles = [];
     this.fadingEnemies = [];
     this.spawnTimer = 0;
@@ -197,18 +198,24 @@ export class GameEngine {
     if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
   }
 
-  tryDestroyWord(predictedLabel) {
-    const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
-    if (matchingWords.length > 0) {
-      matchingWords.forEach(w => {
-        this.spawnExplosion(w.x, w.y);
-        this.fadingEnemies.push({ ...w, opacity: 1.0, life: 1.0 });
+  tryDestroyWord(predictedLabel, sketchImage) {
+    // Find first matching word that isn't already being targeted by a projectile
+    const targetWord = this.words.find(w => w.text.toLowerCase() === predictedLabel.toLowerCase() && !w.isTargeted);
+    
+    if (targetWord) {
+      targetWord.isTargeted = true;
+      
+      // Spawn Projectile
+      this.projectiles.push({
+        image: sketchImage,
+        x: this.canvas.width / 2,
+        y: this.canvas.height / 2,
+        target: targetWord,
+        speed: 600,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 10
       });
 
-      this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
-      this.score += 10;
-      this.wordsDestroyed++;
-      this.scoreEl.innerText = this.score;
       this.attackTimer = 0.5; 
       return true;
     }
@@ -371,6 +378,35 @@ export class GameEngine {
       if (fe.life <= 0) this.fadingEnemies.splice(i, 1);
     }
 
+    // Update projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      const dx = p.target.x - p.x;
+      const dy = p.target.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 40) {
+        // Impact!
+        this.spawnExplosion(p.target.x, p.target.y);
+        this.fadingEnemies.push({ ...p.target, opacity: 1.0, life: 1.0 });
+        
+        // Remove word
+        this.words = this.words.filter(w => w !== p.target);
+        this.projectiles.splice(i, 1);
+        
+        // Update stats
+        this.score += 10;
+        this.wordsDestroyed++;
+        this.scoreEl.innerText = this.score;
+      } else {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        p.x += nx * p.speed * dt;
+        p.y += ny * p.speed * dt;
+        p.rotation += p.rotationSpeed * dt;
+      }
+    }
+
     // Update particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -457,6 +493,18 @@ export class GameEngine {
       this.ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
     }
     this.ctx.globalAlpha = 1.0;
+
+    // Draw Projectiles
+    for (const p of this.projectiles) {
+        this.ctx.save();
+        this.ctx.translate(p.x, p.y);
+        this.ctx.rotate(p.rotation);
+        
+        // Match drawing scale roughly to enemy size or slightly smaller
+        const scale = 0.4;
+        this.ctx.drawImage(p.image, -p.image.width * scale / 2, -p.image.height * scale / 2, p.image.width * scale, p.image.height * scale);
+        this.ctx.restore();
+    }
   }
 
   drawGameOver() {

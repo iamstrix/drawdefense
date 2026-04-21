@@ -142,6 +142,55 @@ export class DrawBoard {
     });
   }
 
+  getCroppedCanvas() {
+    if (this.paths.length === 0) return null;
+    
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    this.paths.forEach(path => {
+      path.forEach(p => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+    });
+    
+    const padding = 20;
+    const width = (maxX - minX) + padding * 2;
+    const height = (maxY - minY) + padding * 2;
+    
+    if (width < 5 || height < 5) return null;
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = height;
+    const octx = offscreen.getContext('2d');
+    
+    // Draw paths onto this offscreen canvas with correct alignment
+    this.paths.forEach(path => {
+        if (path.length < 2) return;
+        octx.beginPath();
+        octx.moveTo(path[0].x - minX + padding, path[0].y - minY + padding);
+        for (let i = 1; i < path.length; i++) {
+          octx.lineTo(path[i].x - minX + padding, path[i].y - minY + padding);
+        }
+        
+        // Re-apply style logic for the projectile look
+        const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
+        octx.lineCap = 'round';
+        octx.lineJoin = 'round';
+        octx.lineWidth = 12;
+        octx.strokeStyle = themeGalaxy ? '#00f3ff' : '#000000';
+        if (themeGalaxy) {
+            octx.shadowBlur = 10;
+            octx.shadowColor = '#00f3ff';
+        }
+        octx.stroke();
+    });
+    
+    return offscreen;
+  }
+
   setPaused(isPaused) {
     this.redrawAll();
     if (isPaused) {
@@ -206,8 +255,10 @@ export class DrawBoard {
 
       // Check against game engine
       let matched = false;
+      const sketchImage = this.getCroppedCanvas();
+      
       for (const label of topLabels) {
-        if (this.gameEngine.tryDestroyWord(label)) {
+        if (this.gameEngine.tryDestroyWord(label, sketchImage)) {
           matched = true;
           this.predictionOutput.innerText = `Matched + Destroyed: ${label}!`;
           break;
