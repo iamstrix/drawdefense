@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lvl2Btn = document.getElementById('lvl2Btn');
   const debugUnlockBtn = document.getElementById('debugUnlockBtn');
   const debugClearStageBtn = document.getElementById('debugClearStageBtn');
+  const debugClickClearBtn = document.getElementById('debugClickClearBtn');
 
   function updateLevelButtons() {
     lvl0Btn.disabled = false;
@@ -67,8 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
     drawBoard.resize();
     drawBoard.clear(); // Ensure fresh board
 
-    // Manage visibility of in-game debug button
+    // Manage visibility of in-game debug buttons
     debugClearStageBtn.style.display = (mode === 'STORY') ? 'block' : 'none';
+    debugClickClearBtn.style.display = 'block';
   }
 
   storyBtn.addEventListener('click', () => showLevelSelect());
@@ -89,6 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
     gameEngine.wordsDestroyed += (gameEngine.targetWords - gameEngine.wordsSpawned) + gameEngine.words.length;
     gameEngine.wordsSpawned = gameEngine.targetWords;
     gameEngine.words = [];
+  });
+
+  debugClickClearBtn.addEventListener('click', () => {
+    gameEngine.debugClickClear = !gameEngine.debugClickClear;
+    debugClickClearBtn.style.background = gameEngine.debugClickClear ? "rgba(0, 100, 0, 0.8)" : "rgba(50, 50, 50, 0.8)";
   });
 
   pauseBtn.addEventListener('click', () => {
@@ -132,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Handle advancing or returning from legacy canvas screens (Win/Game Over)
-  gameEngine.canvas.addEventListener('click', () => {
+  gameEngine.canvas.addEventListener('click', (e) => {
     if (gameEngine.gameState === 'GAME_OVER' || gameEngine.gameState === 'WIN') {
       gameContainer.style.display = 'none';
       centerControls.style.display = 'none';
@@ -141,6 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         mainMenu.classList.remove('hidden');
       }
+    } else {
+      gameEngine.handleCanvasClick(e);
     }
   });
 });

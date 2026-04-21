@@ -25,8 +25,10 @@ export class GameEngine {
     this.levelContainer = document.getElementById('levelContainer');
 
     this.words = [];
+    this.particles = [];
+    this.fadingEnemies = [];
     this.spawnTimer = 0;
-    this.spawnInterval = 5000; // ms (was 3000)
+    this.spawnInterval = 5000;
 
     this.gameState = 'MENU'; // 'MENU', 'PLAYING', 'GAME_OVER', 'STAGE_CLEAR', 'WIN'
     this.gameMode = 'ENDLESS'; // 'ENDLESS', 'STORY'
@@ -38,36 +40,48 @@ export class GameEngine {
     this.targetWords = Infinity;
     this.onStageClear = null;
 
+    this.debugClickClear = false;
+
     this.lastTime = performance.now();
 
-    // Load player sprite
+    // Animation states
+    this.damageTimer = 0;
+    this.damageElapsed = 0;
+    this.attackTimer = 0;
+
+    // Load player sprites
     this.playerSprite = new Image();
     this.playerSprite.src = './src/assets/cat.png';
     this.playerSpriteLoaded = false;
-    this.playerSprite.onload = () => {
-      this.playerSpriteLoaded = true;
-    };
+    this.playerSprite.onload = () => { this.playerSpriteLoaded = true; };
 
-    // Load enemy sprites
+    this.attackSprite = new Image();
+    this.attackSprite.src = './src/assets/cat_attack.png';
+    this.attackSpriteLoaded = false;
+    this.attackSprite.onload = () => { this.attackSpriteLoaded = true; };
+
+    // Load enemy sprites (2 frames per enemy)
     this.enemySprites = [];
     this.enemySpritesLoaded = 0;
-    const totalEnemies = 6;
+    const totalEnemies = 3; 
     for (let i = 1; i <= totalEnemies; i++) {
-      const enemyImg = new Image();
-      enemyImg.src = `./src/assets/enemy${i.toString().padStart(2, '0')}.png`;
-      enemyImg.onload = () => {
-        this.enemySpritesLoaded++;
-      };
-      this.enemySprites.push(enemyImg);
+        const enemyImg1 = new Image();
+        enemyImg1.src = `./src/assets/enemy${i.toString().padStart(2, '0')}.png`;
+        enemyImg1.onload = () => { this.enemySpritesLoaded++; };
+        
+        const enemyImg2 = new Image();
+        const frame2Name = i === 1 ? 'enemy1_.png' : `enemy${i.toString().padStart(2, '0')}_.png`;
+        enemyImg2.src = `./src/assets/${frame2Name}`;
+        enemyImg2.onload = () => { this.enemySpritesLoaded++; };
+        
+        this.enemySprites.push([enemyImg1, enemyImg2]);
     }
 
-    // // Load background image
-    // this.backgroundImage = new Image();
-    // this.backgroundImage.src = './src/assets/l3.jpg';
-    // this.backgroundLoaded = false;
-    // this.backgroundImage.onload = () => {
-    //   this.backgroundLoaded = true;
-    // };
+    // Load background
+    this.backgroundImage = new Image();
+    this.backgroundImage.src = './src/assets/l1.png';
+    this.backgroundLoaded = false;
+    this.backgroundImage.onload = () => { this.backgroundLoaded = true; };
 
     // Resize handler
     window.addEventListener('resize', () => this.resize());
@@ -79,7 +93,8 @@ export class GameEngine {
 
   resize() {
     const parent = this.canvas.parentElement;
-    const size = Math.min(parent.clientWidth, parent.clientHeight) - 20; // 20px padding margin
+    if (!parent) return;
+    const size = Math.min(parent.clientWidth, parent.clientHeight) - 20;
     this.canvas.width = size;
     this.canvas.height = size;
   }
@@ -90,6 +105,8 @@ export class GameEngine {
     this.score = 0;
     this.health = 10;
     this.words = [];
+    this.particles = [];
+    this.fadingEnemies = [];
     this.spawnTimer = 0;
     this.wordsSpawned = 0;
     this.wordsDestroyed = 0;
@@ -103,16 +120,8 @@ export class GameEngine {
       this.levelContainer.style.display = 'block';
       this.storyStage = startStage;
       this.levelEl.innerText = this.storyStage + 1;
-      if (this.storyStage === 0) {
-        this.targetWords = 10; // Stage 1
-        this.spawnInterval = 6000;
-      } else if (this.storyStage === 1) {
-        this.targetWords = 15; // Stage 2
-        this.spawnInterval = 5000;
-      } else {
-        this.targetWords = 20; // Stage 3
-        this.spawnInterval = 4000;
-      }
+      this.targetWords = this.storyStage === 0 ? 10 : (this.storyStage === 1 ? 15 : 20);
+      this.spawnInterval = this.storyStage === 0 ? 6000 : (this.storyStage === 1 ? 5000 : 4000);
       this.wordsLeftEl.innerText = this.targetWords;
     } else {
       this.wordsLeftContainer.style.display = 'none';
@@ -120,8 +129,6 @@ export class GameEngine {
       this.targetWords = Infinity;
       this.spawnInterval = 5000;
     }
-    
-    // Force immediate first spawn
     this.spawnTimer = this.spawnInterval;
   }
 
@@ -136,39 +143,28 @@ export class GameEngine {
     this.levelEl.innerText = this.storyStage + 1;
 
     if (this.storyStage === 1) {
-      this.targetWords = 15; // Stage 2
+      this.targetWords = 15;
       this.spawnInterval = 5000;
-      this.health = Math.min(10, this.health + 3); // Heal some health
+      this.health = Math.min(10, this.health + 3);
     } else if (this.storyStage === 2) {
-      this.targetWords = 20; // Stage 3
+      this.targetWords = 20;
       this.spawnInterval = 4000;
       this.health = Math.min(10, this.health + 3);
     }
     this.healthEl.innerText = this.health;
-    
-    if (this.gameMode === 'STORY') {
-      this.wordsLeftEl.innerText = this.targetWords;
-    }
-    
-    // Force immediate first spawn
+    if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords;
     this.spawnTimer = this.spawnInterval;
   }
 
   spawnWord() {
     if (this.wordsSpawned >= this.targetWords) return;
 
-    let currentPool = ENDLESS_POOL;
-    if (this.gameMode === 'STORY') {
-      currentPool = STORY_POOLS[this.storyStage] || STORY_POOLS[0];
-    }
-
+    let currentPool = (this.gameMode === 'STORY') ? (STORY_POOLS[this.storyStage] || STORY_POOLS[0]) : ENDLESS_POOL;
     const wordText = currentPool[Math.floor(Math.random() * currentPool.length)];
     const enemyIndex = Math.floor(Math.random() * this.enemySprites.length);
 
-    // Radial spawning logic
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.max(this.canvas.width, this.canvas.height) / 2 + 50; // starts outside
-    
+    const distance = Math.max(this.canvas.width, this.canvas.height) / 2 + 50;
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
@@ -176,40 +172,75 @@ export class GameEngine {
       text: wordText,
       x: cx + Math.cos(angle) * distance,
       y: cy + Math.sin(angle) * distance,
-      speed: 12 + Math.random() * 9, // pixels per second (50% faster)
+      speed: 12 + Math.random() * 9,
       isEnemy: true,
-      enemySpriteIndex: enemyIndex
+      enemySpriteIndex: enemyIndex,
+      animationTimer: 0,
+      animationFrame: 0
     });
     this.wordsSpawned++;
-    
-    if (this.gameMode === 'STORY') {
-      this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
-    }
+    if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
   }
 
   tryDestroyWord(predictedLabel) {
     const matchingWords = this.words.filter(w => w.text.toLowerCase() === predictedLabel.toLowerCase());
     if (matchingWords.length > 0) {
+      matchingWords.forEach(w => {
+        this.spawnExplosion(w.x, w.y);
+        this.fadingEnemies.push({ ...w, opacity: 1.0, life: 1.0 });
+      });
+
       this.words = this.words.filter(w => w.text.toLowerCase() !== predictedLabel.toLowerCase());
       this.score += 10;
       this.wordsDestroyed++;
       this.scoreEl.innerText = this.score;
+      this.attackTimer = 0.5; // Ported from sprites branch
       return true;
     }
     return false;
   }
 
-  togglePause() {
-    if (this.gameState === 'PLAYING') {
-      this.isPaused = !this.isPaused;
-      if (!this.isPaused) {
-        this.lastTime = performance.now(); // Avoid a huge dt jump after pausing
+  spawnExplosion(x, y) {
+    const particleCount = 30 + Math.floor(Math.random() * 20);
+    for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 80 + Math.random() * 350;
+        const size = 3 + Math.random() * 5;
+        const gray = Math.floor(Math.random() * 256);
+        this.particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size,
+            color: `rgb(${gray}, ${gray}, ${gray})`,
+            life: 0.8 + Math.random() * 1.2
+        });
+    }
+  }
+
+  handleCanvasClick(e) {
+    if (!this.debugClickClear || this.gameState !== 'PLAYING' || this.isPaused) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    for (const w of this.words) {
+      const dist = Math.sqrt((x - w.x)**2 + (y - w.y)**2);
+      if (dist < 45) {
+        this.tryDestroyWord(w.text);
+        return;
       }
     }
   }
 
+  togglePause() {
+    if (this.gameState === 'PLAYING') {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) this.lastTime = performance.now();
+    }
+  }
+
   loop(currentTime) {
-    const dt = (currentTime - this.lastTime) / 1000; // delta time in seconds
+    const dt = (currentTime - this.lastTime) / 1000;
     this.lastTime = currentTime;
 
     if (this.isPaused) {
@@ -220,18 +251,11 @@ export class GameEngine {
       this.ctx.textAlign = 'center';
       this.ctx.textBaseline = 'middle';
       this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2);
-      this.lastTime = currentTime;
       requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
-    if (this.gameState === 'MENU') {
-      requestAnimationFrame((t) => this.loop(t));
-      return;
-    }
-
-    if (this.gameState === 'STAGE_CLEAR') {
-      // Just idle, visual overlay is handled by main.js
+    if (this.gameState === 'MENU' || this.gameState === 'STAGE_CLEAR') {
       requestAnimationFrame((t) => this.loop(t));
       return;
     }
@@ -249,9 +273,8 @@ export class GameEngine {
       return;
     }
 
-    // Check Win/Clear Conditions
     if (this.gameMode === 'STORY' && this.wordsSpawned >= this.targetWords && this.words.length === 0) {
-      if (this.storyStage < 2) { // 3 stages total (0, 1, 2)
+      if (this.storyStage < 2) {
         this.gameState = 'STAGE_CLEAR';
         this.maxUnlockedStage = Math.max(this.maxUnlockedStage, this.storyStage + 1);
         if (this.onStageClear) this.onStageClear(this.wordsDestroyed);
@@ -262,35 +285,46 @@ export class GameEngine {
       return;
     }
 
-    // Spawning
     this.spawnTimer += dt * 1000;
     if (this.spawnTimer > this.spawnInterval && this.wordsSpawned < this.targetWords) {
       this.spawnWord();
       this.spawnTimer = 0;
-      // progressively harder, but more slowly
       this.spawnInterval = Math.max(1500, this.spawnInterval - 30);
     }
 
     this.update(dt);
     this.draw();
-
     requestAnimationFrame((t) => this.loop(t));
   }
 
   update(dt) {
+    this.damageTimer = Math.max(0, this.damageTimer - dt);
+    this.damageElapsed += dt;
+    this.attackTimer = Math.max(0, this.attackTimer - dt);
+
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
+    // Update active words
     for (let i = this.words.length - 1; i >= 0; i--) {
       const w = this.words[i];
+      
+      // Update walk animation
+      w.animationTimer += dt;
+      if (w.animationTimer >= 0.5) {
+        w.animationTimer = 0;
+        w.animationFrame = 1 - w.animationFrame;
+      }
+
       const dx = cx - w.x;
       const dy = cy - w.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < 50) { // reached player
+      if (dist < 40) { 
         this.words.splice(i, 1);
         this.health -= 1;
         this.healthEl.innerText = this.health;
+        this.damageTimer = 0.2;
       } else {
         const nx = dx / dist;
         const ny = dy / dist;
@@ -298,130 +332,110 @@ export class GameEngine {
         w.y += ny * w.speed * dt;
       }
     }
+
+    // Update fading enemies
+    for (let i = this.fadingEnemies.length - 1; i >= 0; i--) {
+      const fe = this.fadingEnemies[i];
+      fe.life -= dt;
+      fe.opacity = Math.max(0, fe.life);
+      if (fe.life <= 0) this.fadingEnemies.splice(i, 1);
+    }
+
+    // Update particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.95;
+      p.vy *= 0.95;
+      p.life -= dt;
+      if (p.life <= 0) this.particles.splice(i, 1);
+    }
   }
 
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
-    // // Draw background image
-    // if (this.backgroundLoaded) {
-    //   this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
-    // }
+    if (this.backgroundLoaded) {
+      this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+    }
 
     const rootStyles = getComputedStyle(document.documentElement);
     const textColor = rootStyles.getPropertyValue('--text-color').trim() || '#000';
     const accentColor = rootStyles.getPropertyValue('--accent-color').trim() || '#000';
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
 
-    // Draw Player (Center Base)
-    if (this.playerSpriteLoaded) {
-      const spriteSize = 100; // Adjust size as needed
-      this.ctx.drawImage(
-        this.playerSprite,
-        cx - spriteSize / 2,
-        cy - spriteSize / 2,
-        spriteSize,
-        spriteSize
-      );
-    } else {
-      // Fallback to circle while image loads
-      this.ctx.beginPath();
-      this.ctx.arc(cx, cy, 20, 0, Math.PI * 2);
-      if (themeGalaxy) {
-        this.ctx.fillStyle = '#111';
-        this.ctx.fill();
-        this.ctx.strokeStyle = accentColor;
-        this.ctx.lineWidth = 3;
-        this.ctx.shadowBlur = 15;
-        this.ctx.shadowColor = accentColor;
-        this.ctx.stroke();
-      } else {
-        this.ctx.fillStyle = textColor;
-        this.ctx.fill();
-        this.ctx.shadowBlur = 0;
+    // Draw Player
+    const currentPlayerSprite = (this.attackTimer > 0 && this.attackSpriteLoaded) ? this.attackSprite : this.playerSprite;
+    const playerLoaded = (this.attackTimer > 0) ? this.attackSpriteLoaded : this.playerSpriteLoaded;
+    
+    if (playerLoaded) {
+      const spriteSize = 120;
+      if (this.damageTimer > 0) {
+        const pulse = Math.sin(this.damageElapsed * 20) * 0.5 + 0.5;
+        this.ctx.filter = `sepia(${0.5 + pulse * 0.5}) hue-rotate(${-25 - pulse * 25}deg) saturate(${3 + pulse * 2})`;
       }
+      this.ctx.drawImage(currentPlayerSprite, cx - spriteSize / 2, cy - spriteSize / 2, spriteSize, spriteSize);
+      this.ctx.filter = 'none';
     }
 
-    // Draw Words and Enemies
-    this.ctx.font = 'bold 12px Outfit, sans-serif';
-    this.ctx.fillStyle = '#fff';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-
+    // Draw Words and Animated Enemies
     for (const w of this.words) {
-      if (w.isEnemy) {
-        // Draw enemy sprite (largened by 50%: 60px -> 90px)
-        const spriteSize = 90;
-        this.ctx.drawImage(
-          this.enemySprites[w.enemySpriteIndex],
-          w.x - spriteSize / 2,
-          w.y - spriteSize / 2,
-          spriteSize,
-          spriteSize
-        );
-
-        // Draw word text above the sprite
-        this.ctx.font = 'bold 18px Outfit, sans-serif';
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        if (themeGalaxy) {
-          this.ctx.fillStyle = '#fff';
-          this.ctx.shadowBlur = 10;
-          this.ctx.shadowColor = accentColor;
-        } else {
-          this.ctx.fillStyle = textColor;
-          this.ctx.shadowBlur = 0;
-        }
-        this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 25);
+      const spriteSize = 70;
+      const currentSprite = this.enemySprites[w.enemySpriteIndex][w.animationFrame];
+      if (currentSprite.complete) {
+        this.ctx.drawImage(currentSprite, w.x - spriteSize/2, w.y - spriteSize/2, spriteSize, spriteSize);
       }
+
+      // Text Box Logic (from sprites branch)
+      this.ctx.font = 'bold 16px Outfit, sans-serif';
+      const textWidth = this.ctx.measureText(w.text).width;
+      const padding = 4;
+      this.ctx.fillStyle = '#fff';
+      this.ctx.fillRect(w.x - textWidth/2 - padding, w.y - spriteSize/2 - 25, textWidth + padding*2, 20);
+      
+      this.ctx.fillStyle = '#000';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(w.text, w.x, w.y - spriteSize/2 - 10);
     }
 
-    // Reset shadow for next frame
-    this.ctx.shadowBlur = 0;
+    // Draw Fading Enemies
+    for (const fe of this.fadingEnemies) {
+      this.ctx.globalAlpha = fe.opacity;
+      const spriteSize = 70;
+      const currentSprite = this.enemySprites[fe.enemySpriteIndex][fe.animationFrame];
+      if (currentSprite.complete) {
+        this.ctx.drawImage(currentSprite, fe.x - spriteSize/2, fe.y - spriteSize/2, spriteSize, spriteSize);
+      }
+      this.ctx.globalAlpha = 1.0;
+    }
+
+    // Draw Particles
+    for (const p of this.particles) {
+      this.ctx.fillStyle = p.color;
+      this.ctx.globalAlpha = Math.min(1, p.life * 1.5);
+      this.ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    }
+    this.ctx.globalAlpha = 1.0;
   }
 
   drawGameOver() {
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.ctx.fillStyle = '#ff0055';
     this.ctx.font = 'bold 48px Outfit, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2);
-
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '24px Outfit, sans-serif';
-    this.ctx.fillText("Click here to return to menu", this.canvas.width / 2, this.canvas.height / 2 + 50);
-  }
-
-  drawStageClear() {
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.ctx.fillStyle = '#00f3ff';
-    this.ctx.font = 'bold 48px Outfit, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText("STAGE CLEARED!", this.canvas.width / 2, this.canvas.height / 2);
-
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '24px Outfit, sans-serif';
-    this.ctx.fillText("Click here for Next Stage", this.canvas.width / 2, this.canvas.height / 2 + 50);
   }
 
   drawWin() {
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.ctx.fillStyle = '#ffdf00';
     this.ctx.font = 'bold 48px Outfit, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillText("YOU WIN!", this.canvas.width / 2, this.canvas.height / 2);
-
-    this.ctx.fillStyle = '#fff';
-    this.ctx.font = '24px Outfit, sans-serif';
-    this.ctx.fillText("Click here to return to menu.", this.canvas.width / 2, this.canvas.height / 2 + 50);
   }
 }
