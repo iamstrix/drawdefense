@@ -175,4 +175,10 @@ export class MenuInteractivity {
       this.ctx.restore();
     });
   }
+
+  clear() {
+    this.doodles = [];
+    this.currentStroke = [];
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
 }
