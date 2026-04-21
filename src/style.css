@@ -152,28 +152,104 @@ body::before {
 #main-menu,
 #level-select-menu,
 #stage-clear-menu {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: var(--bg-color);
-  z-index: 100;
+  z-index: 500; /* High z-index to cover everything */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   transition: opacity 0.5s ease;
+  overflow: hidden;
+}
+
+#main-menu .menu-content {
+  display: flex;
+  width: 90%;
+  max-width: 1300px;
+  height: 90%;
+  align-items: center;
+  justify-content: space-around;
+  gap: 80px;
+  z-index: 2;
+  pointer-events: none; /* Let drawing pass through to background canvas */
+}
+
+#main-menu .menu-left,
+#main-menu .menu-right {
+  pointer-events: none;
+}
+
+#main-menu:not(.hidden) .menu-buttons button,
+#main-menu:not(.hidden) .title {
+  pointer-events: auto;
+}
+
+#menu-draw-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  cursor: crosshair;
+}
+
+#main-menu .menu-left {
+  flex: 1.2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+#mega-cat {
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.1));
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none; /* Allow drawing through the cat */
+}
+
+:root.theme-galaxy #mega-cat {
+  filter: drop-shadow(0 0 50px var(--accent-color));
+}
+
+#main-menu .menu-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 #main-menu.hidden,
 #level-select-menu.hidden,
 #stage-clear-menu.hidden {
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
-#main-menu .title,
+/* Ensure no children can override the hidden state's pointer-events */
+#main-menu.hidden *,
+#level-select-menu.hidden *,
+#stage-clear-menu.hidden * {
+  pointer-events: none !important;
+}
+
+#main-menu .title {
+  font-size: 82px;
+  margin-bottom: 30px;
+  line-height: 1.1;
+  max-width: 400px;
+}
+
 #level-select-menu .title,
 #stage-clear-menu .title {
   font-size: 64px;
@@ -247,8 +323,8 @@ body::before {
   transform: scale(1.05);
 }
 
-/* Canvas styling */
-canvas {
+/* Canvas styling (Game and Draw boards) */
+#gameCanvas, #drawCanvas {
   background-color: var(--canvas-bg);
   border: var(--pane-border);
   box-shadow: var(--shadow);

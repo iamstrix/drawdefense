@@ -2,6 +2,7 @@ import './style.css';
 import { ThemeManager } from './ThemeManager.js';
 import { GameEngine } from './GameEngine.js';
 import { DrawBoard } from './DrawBoard.js';
+import { MenuInteractivity } from './MenuInteractivity.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Theme System
@@ -12,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Right Side (Drawing Board + ML)
   const drawBoard = new DrawBoard('drawCanvas', gameEngine);
+
+  // Initialize Interactive Menu Background
+  const menuInteractivity = new MenuInteractivity('menu-draw-canvas');
 
   // UI Elements
   const mainMenu = document.getElementById('main-menu');
@@ -189,4 +193,26 @@ document.addEventListener('DOMContentLoaded', () => {
       gameEngine.handleCanvasClick(e);
     }
   });
+
+  // --- Main Menu Mega Cat Animation ---
+  const megaCat = document.getElementById('mega-cat');
+  if (megaCat) {
+    const catImages = [
+      './src/assets/cat.png',
+      './src/assets/cat_idle.png',
+      './src/assets/cat_attack.png',
+      './src/assets/cat_cleared.png'
+    ];
+    let currentCatIdx = 0;
+    setInterval(() => {
+      currentCatIdx = (currentCatIdx + 1) % catImages.length;
+      megaCat.src = catImages[currentCatIdx];
+      
+      // Visual feedback/pop effect
+      megaCat.style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        megaCat.style.transform = 'scale(1)';
+      }, 200);
+    }, 1500);
+  }
 });
