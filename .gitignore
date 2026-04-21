@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .env
+PROBLEMS.md
 
 # Editor directories and files
 .vscode/*

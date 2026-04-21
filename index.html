@@ -1,40 +1,93 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
-    <title>Draw Defense</title>
-  </head>
-  <body>
-    <div id="ui-layer">
-      <div class="stats">
-        <div>Score: <span id="scoreVal">0</span></div>
-        <div>Health: <span id="healthVal">10</span></div>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+  <title>draw defense</title>
+</head>
+
+<body>
+  <div id="ui-layer">
+    <div class="stats">
+      <div id="levelContainer" style="display: none; font-weight: bold; font-size: 32px; margin-bottom: 12px;">Stage
+        <span id="levelVal">1</span>
       </div>
-      <div class="controls">
-        <button id="themeToggleBtn">Galaxy Theme: OFF</button>
-      </div>
+      <div id="wordsLeftContainer" style="display: none;">incoming: <span id="wordsLeftVal">10</span></div>
+      <div>score: <span id="scoreVal">0</span></div>
+      <div>health: <span id="healthVal">10</span></div>
     </div>
-    
-    <div class="split-container">
-      <div id="left-pane" class="pane">
-        <!-- Game Screen -->
-        <canvas id="gameCanvas"></canvas>
-      </div>
-      
-      <div id="right-pane" class="pane">
-        <!-- Draw Board -->
-        <canvas id="drawCanvas"></canvas>
-        <button id="clearDrawBtn">Clear</button>
-        <div id="predictionOutput">Pencil ready...</div>
-      </div>
+    <div class="controls">
+      <button id="themeToggleBtn">Galaxy Theme: OFF</button>
     </div>
-    
-    <script type="module" src="/src/main.js"></script>
-  </body>
+
+    <!-- Central Controls -->
+    <div id="centerControls"
+      style="display: none; position: absolute; left: 50%; top: 20px; transform: translateX(-50%); z-index: 100; gap: 15px;">
+      <button id="pauseBtn" class="control-btn">pause</button>
+      <button id="quitBtn" class="control-btn">quit/menu</button>
+    </div>
+  </div>
+
+  <!-- Main Menu Overlay -->
+  <div id="main-menu" class="overlay">
+    <h1 class="title">draw defense</h1>
+    <div class="menu-buttons">
+      <button id="storyModeBtn">story mode</button>
+      <button id="endlessModeBtn">endless mode</button>
+    </div>
+  </div>
+
+  <!-- Level Selection Overlay -->
+  <div id="level-select-menu" class="overlay hidden">
+    <h1 class="title">select stage</h1>
+    <div class="menu-buttons">
+      <button id="lvl0Btn">stage 1: the basics</button>
+      <button id="lvl1Btn" disabled>stage 2: everyday items</button>
+      <button id="lvl2Btn" disabled>stage 3: advanced objects</button>
+    </div>
+    <button id="backToMenuBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Back to Menu</button>
+    <button id="debugUnlockBtn"
+      style="position: absolute; bottom: 20px; left: 20px; font-size: 14px; padding: 8px 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 6px; cursor: pointer; transition: 0.2s;">Unlock
+      All (Debug)</button>
+  </div>
+
+  <!-- Stage Clear Overlay -->
+  <div id="stage-clear-menu" class="overlay hidden">
+    <h1 class="title" style="color: var(--accent-color);">Stage Cleared!</h1>
+    <p style="font-size: 28px; margin-bottom: 40px; font-weight: bold;">Words Cleared: <span
+        id="wordsClearedVal">0</span></p>
+    <div class="menu-buttons">
+      <button id="nextStageBtn">next level</button>
+      <button id="stageClearMenuBtn">back to menu</button>
+    </div>
+  </div>
+
+  <div class="split-container" id="game-container" style="display: none;">
+    <div id="left-pane" class="pane">
+      <!-- Game Screen -->
+      <canvas id="gameCanvas"></canvas>
+      <button id="debugClearStageBtn"
+        style="position: absolute; bottom: 10px; left: 10px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">auto-clear
+        (Debug)</button>
+      <button id="debugClickClearBtn"
+        style="position: absolute; bottom: 10px; left: 120px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">click-clear</button>
+    </div>
+
+    <div id="right-pane" class="pane">
+      <!-- Draw Board -->
+      <canvas id="drawCanvas"></canvas>
+      <button id="clearDrawBtn">clear</button>
+      <div id="predictionOutput">pencil ready...</div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
 </html>
