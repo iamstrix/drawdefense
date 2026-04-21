@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lvl1Btn = document.getElementById('lvl1Btn');
   const lvl2Btn = document.getElementById('lvl2Btn');
   const debugUnlockBtn = document.getElementById('debugUnlockBtn');
+  const debugClearStageBtn = document.getElementById('debugClearStageBtn');
 
   function updateLevelButtons() {
     lvl0Btn.disabled = false;
@@ -59,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     gameEngine.resize();
     drawBoard.resize();
     drawBoard.clear(); // Ensure fresh board
+    
+    // Manage visibility of in-game debug button
+    debugClearStageBtn.style.display = (mode === 'STORY') ? 'block' : 'none';
   }
 
   storyBtn.addEventListener('click', () => showLevelSelect());
@@ -72,6 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
   debugUnlockBtn.addEventListener('click', () => {
     gameEngine.maxUnlockedStage = 2;
     updateLevelButtons();
+  });
+
+  debugClearStageBtn.addEventListener('click', () => {
+    // Graceful fake-win logic to trick the game engine
+    gameEngine.wordsDestroyed += (gameEngine.targetWords - gameEngine.wordsSpawned) + gameEngine.words.length;
+    gameEngine.wordsSpawned = gameEngine.targetWords;
+    gameEngine.words = [];
   });
 
   // --- STAGE CLEAR MENU LOGIC ---
