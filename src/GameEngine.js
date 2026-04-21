@@ -48,6 +48,8 @@ export class GameEngine {
     this.damageTimer = 0;
     this.damageElapsed = 0;
     this.attackTimer = 0;
+    this.playerIdleTimer = 0;
+    this.playerAnimationFrame = 0;
 
     // Load player sprites
     this.playerSprite = new Image();
@@ -59,6 +61,11 @@ export class GameEngine {
     this.attackSprite.src = './src/assets/cat_attack.png';
     this.attackSpriteLoaded = false;
     this.attackSprite.onload = () => { this.attackSpriteLoaded = true; };
+
+    this.idleSprite = new Image();
+    this.idleSprite.src = './src/assets/cat_idle.png';
+    this.idleSpriteLoaded = false;
+    this.idleSprite.onload = () => { this.idleSpriteLoaded = true; };
 
     // Load enemy sprites (2 frames per enemy)
     this.enemySprites = [];
@@ -310,6 +317,18 @@ export class GameEngine {
     this.damageElapsed += dt;
     this.attackTimer = Math.max(0, this.attackTimer - dt);
 
+    // Update player idle animation
+    if (this.attackTimer <= 0) {
+      this.playerIdleTimer += dt;
+      if (this.playerIdleTimer >= 0.5) {
+        this.playerIdleTimer = 0;
+        this.playerAnimationFrame = 1 - this.playerAnimationFrame;
+      }
+    } else {
+      this.playerIdleTimer = 0;
+      this.playerAnimationFrame = 0;
+    }
+
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
@@ -376,8 +395,16 @@ export class GameEngine {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
 
     // Draw Player
-    const currentPlayerSprite = (this.attackTimer > 0 && this.attackSpriteLoaded) ? this.attackSprite : this.playerSprite;
-    const playerLoaded = (this.attackTimer > 0) ? this.attackSpriteLoaded : this.playerSpriteLoaded;
+    let currentPlayerSprite = this.playerSprite;
+    let playerLoaded = this.playerSpriteLoaded;
+
+    if (this.attackTimer > 0) {
+      currentPlayerSprite = this.attackSprite;
+      playerLoaded = this.attackSpriteLoaded;
+    } else {
+      currentPlayerSprite = (this.playerAnimationFrame === 0) ? this.playerSprite : this.idleSprite;
+      playerLoaded = (this.playerAnimationFrame === 0) ? this.playerSpriteLoaded : this.idleSpriteLoaded;
+    }
     
     if (playerLoaded) {
       const spriteSize = 120;
