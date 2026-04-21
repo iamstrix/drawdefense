@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lvl0Btn = document.getElementById('lvl0Btn');
   const lvl1Btn = document.getElementById('lvl1Btn');
   const lvl2Btn = document.getElementById('lvl2Btn');
+  const debugUnlockBtn = document.getElementById('debugUnlockBtn');
 
   function updateLevelButtons() {
     lvl0Btn.disabled = false;
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Resize canvases since they were display: none
     gameEngine.resize();
     drawBoard.resize();
+    drawBoard.clear(); // Ensure fresh board
   }
 
   storyBtn.addEventListener('click', () => showLevelSelect());
@@ -66,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
   lvl0Btn.addEventListener('click', () => start('STORY', 0));
   lvl1Btn.addEventListener('click', () => start('STORY', 1));
   lvl2Btn.addEventListener('click', () => start('STORY', 2));
+  
+  debugUnlockBtn.addEventListener('click', () => {
+    gameEngine.maxUnlockedStage = 2;
+    updateLevelButtons();
+  });
 
   // --- STAGE CLEAR MENU LOGIC ---
   function hideStageClearMenu() {
@@ -75,11 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
   gameEngine.onStageClear = (wordsDestroyed) => {
     wordsClearedVal.innerText = wordsDestroyed;
     stageClearMenu.classList.remove('hidden');
+    drawBoard.clear(); // Clear player's drawing
+    gameEngine.ctx.clearRect(0, 0, gameEngine.canvas.width, gameEngine.canvas.height);
   };
 
   nextStageBtn.addEventListener('click', () => {
     hideStageClearMenu();
     gameEngine.nextStage();
+    drawBoard.clear();
   });
 
   stageClearMenuBtn.addEventListener('click', () => {

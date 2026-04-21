@@ -113,14 +113,17 @@ export class GameEngine {
       this.targetWords = Infinity;
       this.spawnInterval = 5000;
     }
+    
+    // Force immediate first spawn
+    this.spawnTimer = this.spawnInterval;
   }
 
   nextStage() {
     this.storyStage++;
     this.gameState = 'PLAYING';
     this.words = [];
-    this.spawnTimer = 0;
     this.wordsSpawned = 0;
+    this.wordsDestroyed = 0;
     this.lastTime = performance.now();
 
     if (this.storyStage === 1) {
@@ -137,6 +140,9 @@ export class GameEngine {
     if (this.gameMode === 'STORY') {
       this.wordsLeftEl.innerText = this.targetWords;
     }
+    
+    // Force immediate first spawn
+    this.spawnTimer = this.spawnInterval;
   }
 
   spawnWord() {
@@ -161,7 +167,7 @@ export class GameEngine {
       text: wordText,
       x: cx + Math.cos(angle) * distance,
       y: cy + Math.sin(angle) * distance,
-      speed: 8 + Math.random() * 6, // pixels per second
+      speed: 12 + Math.random() * 9, // pixels per second (50% faster)
       isEnemy: true,
       enemySpriteIndex: enemyIndex
     });
@@ -201,12 +207,14 @@ export class GameEngine {
 
     if (this.gameState === 'WIN') {
       this.drawWin();
+      requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
     if (this.health <= 0) {
       this.gameState = 'GAME_OVER';
       this.drawGameOver();
+      requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
@@ -219,6 +227,7 @@ export class GameEngine {
       } else {
         this.gameState = 'WIN';
       }
+      requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
@@ -313,8 +322,8 @@ export class GameEngine {
 
     for (const w of this.words) {
       if (w.isEnemy) {
-        // Draw enemy sprite
-        const spriteSize = 60;
+        // Draw enemy sprite (largened by 50%: 60px -> 90px)
+        const spriteSize = 90;
         this.ctx.drawImage(
           this.enemySprites[w.enemySpriteIndex],
           w.x - spriteSize / 2,
@@ -324,7 +333,7 @@ export class GameEngine {
         );
 
         // Draw word text above the sprite
-        this.ctx.font = 'bold 12px Outfit, sans-serif';
+        this.ctx.font = 'bold 14px Outfit, sans-serif';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         if (themeGalaxy) {
@@ -335,7 +344,7 @@ export class GameEngine {
           this.ctx.fillStyle = textColor;
           this.ctx.shadowBlur = 0;
         }
-        this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 20);
+        this.ctx.fillText(w.text, w.x, w.y - spriteSize / 2 - 25);
       }
     }
 
