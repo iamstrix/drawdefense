@@ -1,4 +1,5 @@
 import { VLMRecognizer } from './VLMRecognizer.js';
+import { settings } from './SettingsManager.js';
 
 export class DrawBoard {
   constructor(canvasId, gameEngine) {
@@ -25,6 +26,16 @@ export class DrawBoard {
     this.canvas.addEventListener('pointermove', (e) => this.draw(e));
     this.canvas.addEventListener('pointerup', (e) => this.endDraw(e));
     this.canvas.addEventListener('pointerleave', (e) => this.endDraw(e));
+
+    window.addEventListener('keydown', (e) => {
+      const container = document.getElementById('game-container');
+      if (container && container.style.display === 'none') return;
+      
+      // Universal Clear Hotkey
+      if (e.code === settings.eraseHotkey) {
+        this.clear();
+      }
+    });
 
     // Resize handler
     window.addEventListener('resize', () => this.resize());

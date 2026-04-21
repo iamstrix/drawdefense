@@ -3,6 +3,7 @@ import { ThemeManager } from './ThemeManager.js';
 import { GameEngine } from './GameEngine.js';
 import { DrawBoard } from './DrawBoard.js';
 import { MenuInteractivity } from './MenuInteractivity.js';
+import { settings } from './SettingsManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Theme System
@@ -42,8 +43,69 @@ document.addEventListener('DOMContentLoaded', () => {
   const debugClearStageBtn = document.getElementById('debugClearStageBtn');
   const debugClickClearBtn = document.getElementById('debugClickClearBtn');
   const settingsBtn = document.getElementById('settingsBtn');
+  const debugBtn = document.getElementById('debugBtn');
+
+  // Settings UI
+  const settingsMenu = document.getElementById('settings-menu');
+  const settingsMultiStrokeBtn = document.getElementById('settingsMultiStrokeBtn');
+  const settingsRebindBtn = document.getElementById('settingsRebindBtn');
+  const rebindInstruction = document.getElementById('rebindInstruction');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
   let debugModeUnlocked = false;
+  let isRebinding = false;
+
+  function updateSettingsUI() {
+    settingsMultiStrokeBtn.innerText = `Multi-Stroke Mode: ${settings.isMultiStrokeMode ? 'ON' : 'OFF'}`;
+    settingsRebindBtn.innerText = `Clear Hotkey: [ ${settings.eraseHotkeyLabel} ]`;
+  }
+
+  function showSettings() {
+    settingsMenu.classList.remove('hidden');
+    updateSettingsUI();
+  }
+
+  function hideSettings() {
+    if (isRebinding) {
+      isRebinding = false;
+      rebindInstruction.style.opacity = '0';
+    }
+    settingsMenu.classList.add('hidden');
+  }
+
+  settingsBtn.addEventListener('click', () => showSettings());
+  closeSettingsBtn.addEventListener('click', () => hideSettings());
+
+  settingsMultiStrokeBtn.addEventListener('click', () => {
+    settings.toggleMultiStroke();
+    updateSettingsUI();
+  });
+
+  settingsRebindBtn.addEventListener('click', () => {
+    isRebinding = true;
+    rebindInstruction.style.opacity = '1';
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (isRebinding) {
+      e.preventDefault();
+      
+      // Prevent mapping to Escape or Space
+      if (e.code !== 'Escape' && e.code !== 'Space') {
+        let label = e.key.toUpperCase();
+        if (label === ' ') label = 'SPACE'; // Just in case, though we excluded space above
+        settings.setEraseHotkey(e.code, label);
+      }
+      
+      isRebinding = false;
+      rebindInstruction.style.opacity = '0';
+      updateSettingsUI();
+    }
+  });
+
+  window.addEventListener('settingsChanged', () => updateSettingsUI());
+
+  let debugModeUnlockedLocal = false;
 
   function updateLevelButtons() {
     lvl0Btn.disabled = false;
@@ -111,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     debugClickClearBtn.style.background = gameEngine.debugClickClear ? "rgba(0, 100, 0, 0.8)" : "rgba(50, 50, 50, 0.8)";
   });
 
-  settingsBtn.addEventListener('click', () => {
+  debugBtn.addEventListener('click', () => {
     if (!debugModeUnlocked) {
       const pwd = prompt("Enter developer command:");
       if (pwd === "123") {

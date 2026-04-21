@@ -33,8 +33,8 @@
       <button id="quitBtn" class="control-btn">quit/menu</button>
     </div>
 
-    <!-- Settings (Debug) Toggle -->
-    <button id="settingsBtn" title="Developer Settings">⚙️</button>
+    <!-- Debug Toggle -->
+    <button id="debugBtn" title="Developer Settings">⚙️</button>
   </div>
 
   <!-- Main Menu Overlay -->
@@ -49,6 +49,7 @@
         <div class="menu-buttons">
           <button id="storyModeBtn">story mode</button>
           <button id="endlessModeBtn">endless mode</button>
+          <button id="settingsBtn">settings</button>
         </div>
       </div>
     </div>
@@ -115,6 +116,17 @@
       <button id="nextStageBtn">next level</button>
       <button id="stageClearMenuBtn">back to menu</button>
     </div>
+  </div>
+
+  <!-- Settings Overlay -->
+  <div id="settings-menu" class="overlay hidden">
+    <h1 class="title" style="color: var(--accent-color);">Settings</h1>
+    <div class="menu-buttons" style="min-width: 400px; text-align: center;">
+      <button id="settingsMultiStrokeBtn">Multi-Stroke Mode: OFF</button>
+      <button id="settingsRebindBtn">Clear Hotkey: [ R ]</button>
+    </div>
+    <p id="rebindInstruction" style="margin-top: 15px; font-size: 18px; color: var(--accent-color); height: 20px; opacity: 0; transition: opacity 0.3s;">Press any key...</p>
+    <button id="closeSettingsBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Close</button>
   </div>
 
   <div class="split-container" id="game-container" style="display: none;">

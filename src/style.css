@@ -151,7 +151,8 @@ body::before {
 
 #main-menu,
 #level-select-menu,
-#stage-clear-menu {
+#stage-clear-menu,
+#settings-menu {
   position: fixed;
   top: 0;
   left: 0;
@@ -230,7 +231,8 @@ body::before {
 
 #main-menu.hidden,
 #level-select-menu.hidden,
-#stage-clear-menu.hidden {
+#stage-clear-menu.hidden,
+#settings-menu.hidden {
   opacity: 0;
   pointer-events: none !important;
 }
@@ -238,7 +240,8 @@ body::before {
 /* Ensure no children can override the hidden state's pointer-events */
 #main-menu.hidden *,
 #level-select-menu.hidden *,
-#stage-clear-menu.hidden * {
+#stage-clear-menu.hidden *,
+#settings-menu.hidden * {
   pointer-events: none !important;
 }
 
@@ -368,7 +371,7 @@ body::before {
   text-shadow: 0 0 5px var(--accent-color);
 }
 
-#settingsBtn {
+#debugBtn {
   position: fixed;
   bottom: 15px;
   left: 15px;
@@ -390,7 +393,7 @@ body::before {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-:root.theme-galaxy #settingsBtn {
+:root.theme-galaxy #debugBtn {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-color: var(--accent-color);
@@ -398,7 +401,7 @@ body::before {
   box-shadow: 0 0 10px var(--accent-color);
 }
 
-#settingsBtn:hover {
+#debugBtn:hover {
   transform: rotate(45deg) scale(1.1);
 }
 

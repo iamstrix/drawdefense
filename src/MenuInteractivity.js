@@ -1,3 +1,5 @@
+import { settings } from './SettingsManager.js';
+
 export class MenuInteractivity {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
@@ -6,6 +8,7 @@ export class MenuInteractivity {
     
     this.doodles = [];
     this.currentStroke = [];
+    this.accumulatedStrokes = [];
     this.isDrawing = false;
     
     this.resize();
@@ -16,6 +19,27 @@ export class MenuInteractivity {
     window.addEventListener('pointerup', (e) => this.endDraw(e));
     window.addEventListener('pointerleave', (e) => this.endDraw(e));
     
+    window.addEventListener('keydown', (e) => {
+      // Universal Clear Hotkey
+      if (e.code === settings.eraseHotkey) {
+        this.clear();
+      }
+
+      if (e.code === 'Space' && settings.isMultiStrokeMode && this.accumulatedStrokes.length > 0) {
+        e.preventDefault();
+        this.createDoodle(this.accumulatedStrokes);
+        this.accumulatedStrokes = [];
+      }
+    });
+
+    // Listen for settings change to immediately dump accumulated strokes if toggled off
+    window.addEventListener('settingsChanged', () => {
+      if (!settings.isMultiStrokeMode && this.accumulatedStrokes.length > 0) {
+        this.createDoodle(this.accumulatedStrokes);
+        this.accumulatedStrokes = [];
+      }
+    });
+    
     this.loop();
   }
   
@@ -24,6 +48,14 @@ export class MenuInteractivity {
     this.canvas.height = window.innerHeight;
   }
   
+  clear() {
+    this.doodles = [];
+    this.currentStroke = [];
+    this.accumulatedStrokes = [];
+    this.isDrawing = false;
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
   startDraw(e) {
     // Only allow drawing if clicking the background (not UI)
     if (e.target !== this.canvas) return;
@@ -48,18 +80,24 @@ export class MenuInteractivity {
       return;
     }
     
-    // Snapshot and Marquee
-    this.createDoodle(this.currentStroke);
-    this.currentStroke = [];
+    if (settings.isMultiStrokeMode) {
+      this.accumulatedStrokes.push(this.currentStroke);
+      this.currentStroke = [];
+    } else {
+      this.createDoodle([this.currentStroke]);
+      this.currentStroke = [];
+    }
   }
   
-  createDoodle(stroke) {
+  createDoodle(strokes) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    stroke.forEach(p => {
-      minX = Math.min(minX, p.x);
-      minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x);
-      maxY = Math.max(maxY, p.y);
+    strokes.forEach(stroke => {
+      stroke.forEach(p => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
     });
     
     const padding = 10;
@@ -73,12 +111,6 @@ export class MenuInteractivity {
     offscreen.height = height;
     const octx = offscreen.getContext('2d');
     
-    octx.beginPath();
-    octx.moveTo(stroke[0].x - minX + padding, stroke[0].y - minY + padding);
-    for(let i=1; i<stroke.length; i++) {
-      octx.lineTo(stroke[i].x - minX + padding, stroke[i].y - minY + padding);
-    }
-    
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     octx.strokeStyle = themeGalaxy ? '#00f3ff' : '#000';
     octx.lineWidth = themeGalaxy ? 3 : 2;
@@ -90,7 +122,14 @@ export class MenuInteractivity {
         octx.shadowColor = '#00f3ff';
     }
     
-    octx.stroke();
+    strokes.forEach(stroke => {
+      octx.beginPath();
+      octx.moveTo(stroke[0].x - minX + padding, stroke[0].y - minY + padding);
+      for(let i=1; i<stroke.length; i++) {
+        octx.lineTo(stroke[i].x - minX + padding, stroke[i].y - minY + padding);
+      }
+      octx.stroke();
+    });
     
     this.doodles.push({
       canvas: offscreen,
@@ -141,6 +180,27 @@ export class MenuInteractivity {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     const strokeColor = themeGalaxy ? '#00f3ff' : '#000';
 
+    // Set common styles for drawing
+    this.ctx.strokeStyle = strokeColor;
+    this.ctx.lineWidth = 4;
+    this.ctx.lineCap = 'round';
+    if (themeGalaxy) {
+        this.ctx.shadowBlur = 15;
+        this.ctx.shadowColor = '#00f3ff';
+    }
+
+    // Draw accumulated strokes
+    this.accumulatedStrokes.forEach(stroke => {
+      if (stroke.length > 1) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(stroke[0].x, stroke[0].y);
+        for(let i=1; i<stroke.length; i++) {
+          this.ctx.lineTo(stroke[i].x, stroke[i].y);
+        }
+        this.ctx.stroke();
+      }
+    });
+
     // Draw current active stroke
     if (this.isDrawing && this.currentStroke.length > 1) {
       this.ctx.beginPath();
@@ -148,16 +208,9 @@ export class MenuInteractivity {
       for(let i=1; i<this.currentStroke.length; i++) {
         this.ctx.lineTo(this.currentStroke[i].x, this.currentStroke[i].y);
       }
-      this.ctx.strokeStyle = strokeColor;
-      this.ctx.lineWidth = 4;
-      this.ctx.lineCap = 'round';
-      if (themeGalaxy) {
-          this.ctx.shadowBlur = 15;
-          this.ctx.shadowColor = '#00f3ff';
-      }
       this.ctx.stroke();
-      this.ctx.shadowBlur = 0;
     }
+    this.ctx.shadowBlur = 0;
     
     // Draw all floating doodles
     this.doodles.forEach(d => {
