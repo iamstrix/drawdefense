@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsModal = document.getElementById('settings-modal');
   const closeSettingsBtn = document.getElementById('closeSettingsBtn');
   const cfgClearKeyBtn = document.getElementById('cfgClearKeyBtn');
+  const modalDevToggleBtn = document.getElementById('modalDevToggleBtn');
   
   let clearKey = 'c';
   let isConfiguringKey = false;
@@ -127,34 +128,43 @@ document.addEventListener('DOMContentLoaded', () => {
     cfgClearKeyBtn.innerText = clearKey.toUpperCase();
   });
 
-  const settingsBtn = document.getElementById('settingsBtn');
-  settingsBtn.addEventListener('click', () => {
-    if (!debugModeUnlocked) {
-      const pwd = prompt("Enter developer command:");
-      if (pwd === "123") {
-        debugModeUnlocked = true;
-        
-        // Update visibility based on current view
-        if (!levelSelectMenu.classList.contains('hidden')) {
-          debugUnlockBtn.style.display = 'block';
-        }
-        if (gameContainer.style.display === 'flex') {
-          debugClickClearBtn.style.display = 'block';
-          if (gameEngine.gameMode === 'STORY') debugClearStageBtn.style.display = 'block';
-        }
-      } else if (pwd !== null) {
-        alert("Incorrect command.");
+  function updateDevModeUI() {
+    modalDevToggleBtn.innerText = debugModeUnlocked ? "ACTIVE" : "LOCKED";
+    modalDevToggleBtn.style.color = debugModeUnlocked ? "var(--accent-color)" : "var(--text-color)";
+    
+    // Update visibility of in-game debug buttons
+    if (debugModeUnlocked) {
+      if (!levelSelectMenu.classList.contains('hidden')) debugUnlockBtn.style.display = 'block';
+      if (gameContainer.style.display === 'flex') {
+        debugClickClearBtn.style.display = 'block';
+        if (gameEngine.gameMode === 'STORY') debugClearStageBtn.style.display = 'block';
       }
     } else {
-      // Toggle off
-      debugModeUnlocked = false;
       debugUnlockBtn.style.display = 'none';
       debugClickClearBtn.style.display = 'none';
       debugClearStageBtn.style.display = 'none';
       gameEngine.debugClickClear = false;
       debugClickClearBtn.style.background = "rgba(50, 50, 50, 0.8)";
     }
+  }
+
+  modalDevToggleBtn.addEventListener('click', () => {
+    if (!debugModeUnlocked) {
+      const pwd = prompt("Enter developer command:");
+      if (pwd === "123") {
+        debugModeUnlocked = true;
+        updateDevModeUI();
+      } else if (pwd !== null) {
+        alert("Incorrect command.");
+      }
+    } else {
+      debugModeUnlocked = false;
+      updateDevModeUI();
+    }
   });
+
+  const settingsBtn = document.getElementById('settingsBtn');
+  settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
 
   pauseBtn.addEventListener('click', () => {
     gameEngine.togglePause();
