@@ -21,7 +21,7 @@
 - **Framework**: [Vite](https://vitejs.dev/)
 - **Core**: Vanilla JavaScript (ES6+), HTML5 Canvas
 - **Logic**: Delta-time based game loop (60FPS optimization)
-- **AI Backend**: [Groq API](https://groq.com/) (Llama-3.2-11b-vision-preview or Llama-4-Scout)
+- **AI Backend**: [Groq API](https://groq.com/) (Llama-4-Scout)
 - **Styling**: Vanilla CSS (CSS Variables)
 
 ---
@@ -43,9 +43,8 @@ This game requires a Vision AI key from **Groq** to perform real-time image clas
 3.  Add it to the file like this:
     ```env
     VITE_GROQ_API_KEY=your_gsk_key_here
-    VITE_HF_API_KEY=your_optional_huggingface_key
     ```
-    *(Note: The game currently routes through a Vite proxy to securely inject these headers.)*
+    *(Note: The game securely routes through a Vite proxy `/api/groq` to inject these headers.)*
 
 ### 3. Run Locally
 ```bash

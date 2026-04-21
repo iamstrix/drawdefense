@@ -32,6 +32,9 @@
       <button id="pauseBtn" class="control-btn">pause</button>
       <button id="quitBtn" class="control-btn">quit/menu</button>
     </div>
+
+    <!-- Settings (Debug) Toggle -->
+    <button id="settingsBtn" style="position: fixed; bottom: 10px; left: 10px; z-index: 1000; background: none; border: none; color: #777; cursor: pointer; font-size: 20px; outline: none;" title="Developer Settings">⚙️</button>
   </div>
 
   <!-- Main Menu Overlay -->
@@ -53,7 +56,7 @@
     </div>
     <button id="backToMenuBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Back to Menu</button>
     <button id="debugUnlockBtn"
-      style="position: absolute; bottom: 20px; left: 20px; font-size: 14px; padding: 8px 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 6px; cursor: pointer; transition: 0.2s;">Unlock
+      style="position: absolute; bottom: 20px; left: 50px; font-size: 14px; padding: 8px 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 6px; cursor: pointer; transition: 0.2s; display: none;">Unlock
       All (Debug)</button>
   </div>
 
@@ -73,10 +76,10 @@
       <!-- Game Screen -->
       <canvas id="gameCanvas"></canvas>
       <button id="debugClearStageBtn"
-        style="position: absolute; bottom: 10px; left: 10px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">auto-clear
+        style="position: absolute; bottom: 10px; left: 50px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">auto-clear
         (Debug)</button>
       <button id="debugClickClearBtn"
-        style="position: absolute; bottom: 10px; left: 120px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">click-clear</button>
+        style="position: absolute; bottom: 10px; left: 150px; display: none; padding: 5px 10px; font-size: 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 4px; cursor: pointer; z-index: 50;">click-clear</button>
     </div>
 
     <div id="right-pane" class="pane">

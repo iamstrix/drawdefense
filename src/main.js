@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const debugUnlockBtn = document.getElementById('debugUnlockBtn');
   const debugClearStageBtn = document.getElementById('debugClearStageBtn');
   const debugClickClearBtn = document.getElementById('debugClickClearBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+
+  let debugModeUnlocked = false;
 
   function updateLevelButtons() {
     lvl0Btn.disabled = false;
@@ -48,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mainMenu.classList.add('hidden');
     levelSelectMenu.classList.remove('hidden');
     updateLevelButtons();
+    debugUnlockBtn.style.display = debugModeUnlocked ? 'block' : 'none';
   }
 
   function hideLevelSelect() {
@@ -69,8 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
     drawBoard.clear(); // Ensure fresh board
 
     // Manage visibility of in-game debug buttons
-    debugClearStageBtn.style.display = (mode === 'STORY') ? 'block' : 'none';
-    debugClickClearBtn.style.display = 'block';
+    if (debugModeUnlocked) {
+      debugClearStageBtn.style.display = (mode === 'STORY') ? 'block' : 'none';
+      debugClickClearBtn.style.display = 'block';
+    } else {
+      debugClearStageBtn.style.display = 'none';
+      debugClickClearBtn.style.display = 'none';
+    }
   }
 
   storyBtn.addEventListener('click', () => showLevelSelect());
@@ -96,6 +105,34 @@ document.addEventListener('DOMContentLoaded', () => {
   debugClickClearBtn.addEventListener('click', () => {
     gameEngine.debugClickClear = !gameEngine.debugClickClear;
     debugClickClearBtn.style.background = gameEngine.debugClickClear ? "rgba(0, 100, 0, 0.8)" : "rgba(50, 50, 50, 0.8)";
+  });
+
+  settingsBtn.addEventListener('click', () => {
+    if (!debugModeUnlocked) {
+      const pwd = prompt("Enter developer command:");
+      if (pwd === "123") {
+        debugModeUnlocked = true;
+        
+        // Update visibility based on current view
+        if (!levelSelectMenu.classList.contains('hidden')) {
+          debugUnlockBtn.style.display = 'block';
+        }
+        if (gameContainer.style.display === 'flex') {
+          debugClickClearBtn.style.display = 'block';
+          if (gameEngine.gameMode === 'STORY') debugClearStageBtn.style.display = 'block';
+        }
+      } else if (pwd !== null) {
+        alert("Incorrect command.");
+      }
+    } else {
+      // Toggle off
+      debugModeUnlocked = false;
+      debugUnlockBtn.style.display = 'none';
+      debugClickClearBtn.style.display = 'none';
+      debugClearStageBtn.style.display = 'none';
+      gameEngine.debugClickClear = false;
+      debugClickClearBtn.style.background = "rgba(50, 50, 50, 0.8)";
+    }
   });
 
   pauseBtn.addEventListener('click', () => {
