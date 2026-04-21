@@ -22,7 +22,7 @@
       <div>score: <span id="scoreVal">0</span></div>
       <div>health: <span id="healthVal">10</span></div>
     </div>
-    <div class="controls">
+    <div class="controls" style="display: none;">
       <button id="themeToggleBtn">Galaxy Theme: OFF</button>
     </div>
 
@@ -49,6 +49,7 @@
         <div class="menu-buttons">
           <button id="storyModeBtn">story mode</button>
           <button id="endlessModeBtn">endless mode</button>
+          <button id="configSettingsBtn">config settings</button>
         </div>
       </div>
     </div>
@@ -56,6 +57,23 @@
 
   <!-- Level Selection Overlay -->
   <div id="level-select-menu" class="overlay hidden">
+    <div class="marquee top-marquee">
+      <div class="marquee-content">
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+      </div>
+    </div>
+
     <h1 class="title">select stage</h1>
     <div class="menu-buttons">
       <button id="lvl0Btn">stage 1: the basics</button>
@@ -63,9 +81,49 @@
       <button id="lvl2Btn" disabled>stage 3: advanced objects</button>
     </div>
     <button id="backToMenuBtn" style="margin-top: 40px; padding: 10px 20px; font-size: 18px;">Back to Menu</button>
+    
+    <div class="marquee bottom-marquee">
+      <div class="marquee-content">
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+        <img src="./src/assets/enemy01.png" alt="enemy" />
+        <img src="./src/assets/enemy02.png" alt="enemy" />
+        <img src="./src/assets/enemy03.png" alt="enemy" />
+        <img src="./src/assets/enemy07.png" alt="ufo" />
+      </div>
+    </div>
+    
     <button id="debugUnlockBtn"
       style="position: absolute; bottom: 20px; left: 50px; font-size: 14px; padding: 8px 12px; background: rgba(50, 50, 50, 0.8); color: #ccc; border: 1px solid #777; border-radius: 6px; cursor: pointer; transition: 0.2s; display: none;">Unlock
       All (Debug)</button>
+  </div>
+
+  <!-- Config Settings Modal -->
+  <div id="settings-modal" class="hidden">
+    <div class="modal-content">
+      <h1 class="title">settings</h1>
+      
+      <div class="setting-row">
+        <span>Galaxy Mode</span>
+        <button id="modalThemeToggleBtn" class="control-btn">OFF</button>
+      </div>
+      
+      <div class="setting-row">
+        <div class="setting-label">
+          <span>Clear Key</span>
+          <span class="hint">Click then press a key</span>
+        </div>
+        <button id="cfgClearKeyBtn" class="control-btn">C</button>
+      </div>
+      
+      <button id="closeSettingsBtn" class="control-btn main-close">Close Settings</button>
+    </div>
   </div>
 
   <!-- Stage Clear Overlay -->

@@ -80,6 +80,132 @@ body::before {
   }
 }
 
+/* Marquee Styles (Story Mode Selection) */
+.marquee {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+:root.theme-galaxy .marquee {
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.top-marquee {
+  top: 0;
+}
+
+.bottom-marquee {
+  bottom: 0;
+}
+
+.marquee-content {
+  display: flex;
+  gap: 60px;
+  padding: 0 30px;
+  white-space: nowrap;
+}
+
+.marquee-content img {
+  height: 80px;
+  width: auto;
+  opacity: 0.5;
+  filter: grayscale(1);
+  transition: opacity 0.5s ease;
+}
+
+:root.theme-galaxy .marquee-content img {
+  filter: drop-shadow(0 0 5px var(--accent-color));
+  opacity: 0.7;
+}
+
+.top-marquee .marquee-content {
+  animation: scrollRTL 30s linear infinite;
+}
+
+.bottom-marquee .marquee-content {
+  animation: scrollLTR 30s linear infinite;
+}
+
+@keyframes scrollRTL {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scrollLTR {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes scrollLTR {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* Modal Specifics */
+#settings-modal {
+  background-color: rgba(0, 0, 0, 0.4); /* Backdrop */
+  backdrop-filter: blur(5px);
+  z-index: 2000 !important;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+}
+
+#settings-modal .modal-content {
+  background-color: var(--bg-color);
+  padding: 50px;
+  border: var(--pane-border);
+  border-radius: 16px;
+  min-width: 450px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#settings-modal .setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 25px;
+}
+
+#settings-modal .setting-label {
+  display: flex;
+  flex-direction: column;
+}
+
+#settings-modal .setting-row span {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+#settings-modal .hint {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+#settings-modal .control-btn {
+  min-width: 120px;
+}
+
+#settings-modal .main-close {
+  margin-top: 30px;
+  padding: 15px 40px;
+  font-size: 20px;
+}
+
 /* UI Layer */
 #ui-layer {
   position: absolute;
@@ -151,7 +277,8 @@ body::before {
 
 #main-menu,
 #level-select-menu,
-#stage-clear-menu {
+#stage-clear-menu,
+#settings-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -231,7 +358,8 @@ body::before {
 
 #main-menu.hidden,
 #level-select-menu.hidden,
-#stage-clear-menu.hidden {
+#stage-clear-menu.hidden,
+#settings-modal.hidden {
   opacity: 0;
   pointer-events: none !important;
 }
@@ -239,7 +367,8 @@ body::before {
 /* Ensure no children can override the hidden state's pointer-events */
 #main-menu.hidden *,
 #level-select-menu.hidden *,
-#stage-clear-menu.hidden * {
+#stage-clear-menu.hidden *,
+#settings-modal.hidden * {
   pointer-events: none !important;
 }
 

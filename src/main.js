@@ -41,7 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const debugUnlockBtn = document.getElementById('debugUnlockBtn');
   const debugClearStageBtn = document.getElementById('debugClearStageBtn');
   const debugClickClearBtn = document.getElementById('debugClickClearBtn');
-  const settingsBtn = document.getElementById('settingsBtn');
+  const configSettingsBtn = document.getElementById('configSettingsBtn');
+  const settingsModal = document.getElementById('settings-modal');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  const cfgClearKeyBtn = document.getElementById('cfgClearKeyBtn');
+  
+  let clearKey = 'c';
+  let isConfiguringKey = false;
 
   let debugModeUnlocked = false;
 
@@ -111,6 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
     debugClickClearBtn.style.background = gameEngine.debugClickClear ? "rgba(0, 100, 0, 0.8)" : "rgba(50, 50, 50, 0.8)";
   });
 
+  configSettingsBtn.addEventListener('click', () => {
+    settingsModal.classList.remove('hidden');
+  });
+
+  closeSettingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('hidden');
+    isConfiguringKey = false;
+    cfgClearKeyBtn.innerText = clearKey.toUpperCase();
+  });
+
+  const settingsBtn = document.getElementById('settingsBtn');
   settingsBtn.addEventListener('click', () => {
     if (!debugModeUnlocked) {
       const pwd = prompt("Enter developer command:");
@@ -215,4 +232,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 200);
     }, 1500);
   }
+
+  // --- SETTINGS: CONFIGURABLE CLEAR KEY ---
+  cfgClearKeyBtn.addEventListener('click', () => {
+    isConfiguringKey = true;
+    cfgClearKeyBtn.innerText = "...";
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (isConfiguringKey) {
+      clearKey = e.key.toLowerCase();
+      cfgClearKeyBtn.innerText = clearKey.toUpperCase();
+      isConfiguringKey = false;
+      e.preventDefault();
+      return;
+    }
+
+    // Trigger Clear Board
+    if (e.key.toLowerCase() === clearKey && !isConfiguringKey) {
+      // Clear game draw board
+      if (drawBoard) drawBoard.clear();
+      // Clear menu draw board (if visible)
+      if (menuInteractivity) menuInteractivity.clear();
+    }
+  });
 });

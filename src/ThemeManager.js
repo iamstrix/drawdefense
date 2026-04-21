@@ -1,10 +1,10 @@
 export class ThemeManager {
   constructor() {
     this.isGalaxy = false;
-    this.toggleBtn = document.getElementById('themeToggleBtn');
+    this.buttons = [document.getElementById('themeToggleBtn'), document.getElementById('modalThemeToggleBtn')];
     
-    this.toggleBtn.addEventListener('click', () => {
-      this.toggleTheme();
+    this.buttons.forEach(btn => {
+      if (btn) btn.addEventListener('click', () => this.toggleTheme());
     });
   }
 
@@ -13,14 +13,19 @@ export class ThemeManager {
     const root = document.documentElement;
     if (this.isGalaxy) {
       root.classList.add('theme-galaxy');
-      this.toggleBtn.innerText = 'Galaxy Theme: ON';
     } else {
       root.classList.remove('theme-galaxy');
-      this.toggleBtn.innerText = 'Galaxy Theme: OFF';
     }
+    this.updateButtons();
     
     // Dispatch an event so canvases can redraw if needed
     window.dispatchEvent(new Event('themeToggled'));
+  }
+
+  updateButtons() {
+    this.buttons.forEach(btn => {
+      if (btn) btn.innerText = this.isGalaxy ? 'ON' : 'OFF';
+    });
   }
 
   isGalaxyTheme() {

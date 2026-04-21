@@ -241,9 +241,16 @@ export class DrawBoard {
     // Get active words
     const activeWords = this.gameEngine.words.map(w => w.text);
 
+    // Capture the current sketch for the projectile *before* the API call
+    // logic, because the user might clear the board while the API is thinking.
+    const sketchImageForProjectile = this.getCroppedCanvas();
+
     // We send compressed/resized image to recognizer
     console.log(`[Telemetry] Calling VLM classify() with optimized image (${width}x${height}, JPEG)`);
     this.recognizer.classify(base64Image, activeWords, (result) => {
+      // If board was cleared and no paths were captured, or API failed
+      if (!sketchImageForProjectile) return; 
+
       if (result.error) {
         this.predictionOutput.innerText = 'Error: API Error';
         return;
@@ -255,10 +262,9 @@ export class DrawBoard {
 
       // Check against game engine
       let matched = false;
-      const sketchImage = this.getCroppedCanvas();
       
       for (const label of topLabels) {
-        if (this.gameEngine.tryDestroyWord(label, sketchImage)) {
+        if (this.gameEngine.tryDestroyWord(label, sketchImageForProjectile)) {
           matched = true;
           this.predictionOutput.innerText = `Matched + Destroyed: ${label}!`;
           break;

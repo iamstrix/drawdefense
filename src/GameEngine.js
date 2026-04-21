@@ -521,6 +521,7 @@ export class GameEngine {
 
     // Draw Projectiles
     for (const p of this.projectiles) {
+        if (!p.image) continue;
         this.ctx.save();
         this.ctx.translate(p.x, p.y);
         this.ctx.rotate(p.rotation);
