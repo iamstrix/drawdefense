@@ -540,3 +540,54 @@ body::before {
     gap: 20px;
   }
 }
+
+/* Alien Marquee Effect */
+.marquee {
+  position: absolute;
+  left: 0;
+  width: 100vw;
+  overflow-x: hidden;
+  overflow-y: visible;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  background: transparent;
+}
+
+.top-marquee {
+  top: 10px;
+}
+
+.bottom-marquee {
+  bottom: 10px;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee-anim 20s linear infinite;
+  /* Duplicate content inline to ensure seamless scrolling */
+}
+
+.bottom-marquee .marquee-content {
+  animation: marquee-anim-reverse 20s linear infinite;
+}
+
+.marquee-content img {
+  height: 80px;
+  width: auto;
+  margin: 0 40px;
+  padding: 20px 0;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 15px var(--accent-color));
+}
+
+@keyframes marquee-anim {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-anim-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
