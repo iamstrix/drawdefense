@@ -239,8 +239,8 @@ export class DrawBoard {
     // Export as JPEG (usually much smaller than PNG for these sketches)
     const base64Image = offscreen.toDataURL('image/jpeg', 0.7);
 
-    // Get active words
-    const activeWords = this.gameEngine.words.map(w => w.text);
+    // Get unique active words currently on screen
+    const activeWords = [...new Set(this.gameEngine.words.map(w => w.text))];
 
     // Capture the current sketch for the projectile *before* the API call
     // logic, because the user might clear the board while the API is thinking.
