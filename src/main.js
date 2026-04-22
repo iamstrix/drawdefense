@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const storyBtn = document.getElementById('storyModeBtn');
   const endlessBtn = document.getElementById('endlessModeBtn');
+  const customBtn = document.getElementById('customModeBtn');
   const backToMenuBtn = document.getElementById('backToMenuBtn');
 
   const lvl0Btn = document.getElementById('lvl0Btn');
@@ -47,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const cfgClearKeyBtn = document.getElementById('cfgClearKeyBtn');
   const modalDevToggleBtn = document.getElementById('modalDevToggleBtn');
   const modalVlmToggleBtn = document.getElementById('modalVlmToggleBtn');
+  const customModeModal = document.getElementById('custom-mode-modal');
+  const customWordsInput = document.getElementById('customWordsInput');
+  const startCustomBtn = document.getElementById('startCustomBtn');
+  const cancelCustomBtn = document.getElementById('cancelCustomBtn');
   
   let clearKey = 'c';
   let isConfiguringKey = false;
@@ -71,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
     mainMenu.classList.remove('hidden');
   }
 
-  function start(mode, stage = 0) {
+  function start(mode, stage = 0, customWords = []) {
     mainMenu.classList.add('hidden');
     levelSelectMenu.classList.add('hidden');
     gameContainer.style.display = 'flex';
     centerControls.style.display = 'flex';
     pauseBtn.innerText = "pause";
-    gameEngine.startGame(mode, stage);
+    gameEngine.startGame(mode, stage, customWords);
 
     // Resize canvases since they were display: none
     gameEngine.resize();
@@ -96,6 +101,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   storyBtn.addEventListener('click', () => showLevelSelect());
   endlessBtn.addEventListener('click', () => start('ENDLESS'));
+  
+  customBtn.addEventListener('click', () => {
+    customModeModal.classList.remove('hidden');
+    customWordsInput.focus();
+  });
+
+  cancelCustomBtn.addEventListener('click', () => {
+    customModeModal.classList.add('hidden');
+    customWordsInput.value = '';
+  });
+
+  startCustomBtn.addEventListener('click', () => {
+    const input = customWordsInput.value;
+    if (input) {
+      const words = input.split(',').map(w => w.trim()).filter(w => w.length > 0);
+      if (words.length > 0) {
+        customModeModal.classList.add('hidden');
+        customWordsInput.value = '';
+        start('CUSTOM', 0, words);
+      } else {
+        alert("Please enter at least one valid word.");
+      }
+    } else {
+      alert("Please enter some words first!");
+    }
+  });
+
   backToMenuBtn.addEventListener('click', () => hideLevelSelect());
 
   lvl0Btn.addEventListener('click', () => start('STORY', 0));

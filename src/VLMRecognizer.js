@@ -42,8 +42,8 @@ export class VLMRecognizer {
     }
 
     const question = providerId === 'groq' 
-      ? `Target words: ${activeWords.join(', ')}. Rule: If the image reasonably resembles a target, output ONLY that exact word. If unrecognizable, output ONLY 'none'`
-      : `Which of these words best describes this sketch: ${activeWords.join(', ')}? Respond with ONLY the single matching word.`;
+      ? `Task: Identify the sketch. Options: [${activeWords.join(', ')}]. Rule: You MUST output ONLY the exact matching word from the options list. If no options match, output 'none'. No explanation.`
+      : `Looking at this sketch, which of these exact words fits best: ${activeWords.join(', ')}? YOU MUST RESPOND WITH ONLY ONE WORD FROM THE LIST OR 'NONE'.`;
 
     console.log(`[VLM] [${config.name}] Classifying...`);
 

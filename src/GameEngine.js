@@ -39,6 +39,7 @@ export class GameEngine {
     this.wordsSpawned = 0;
     this.wordsDestroyed = 0;
     this.targetWords = Infinity;
+    this.customVocabulary = [];
     this.onStageClear = null;
 
     this.debugClickClear = false;
@@ -113,8 +114,9 @@ export class GameEngine {
     this.canvas.height = size;
   }
 
-  startGame(mode, startStage = 0) {
+  startGame(mode, startStage = 0, customWords = []) {
     this.gameMode = mode;
+    this.customVocabulary = customWords;
     this.gameState = 'PLAYING';
     this.score = 0;
     this.health = 10;
@@ -175,7 +177,14 @@ export class GameEngine {
   spawnWord() {
     if (this.wordsSpawned >= this.targetWords) return;
 
-    let currentPool = (this.gameMode === 'STORY') ? (STORY_POOLS[this.storyStage] || STORY_POOLS[0]) : ENDLESS_POOL;
+    let currentPool;
+    if (this.gameMode === 'STORY') {
+      currentPool = STORY_POOLS[this.storyStage] || STORY_POOLS[0];
+    } else if (this.gameMode === 'CUSTOM' && this.customVocabulary.length > 0) {
+      currentPool = this.customVocabulary;
+    } else {
+      currentPool = ENDLESS_POOL;
+    }
     const wordText = currentPool[Math.floor(Math.random() * currentPool.length)];
     const enemyIndex = Math.floor(Math.random() * this.enemySprites.length);
 
