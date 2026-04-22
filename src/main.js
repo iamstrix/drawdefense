@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const cfgClearKeyBtn = document.getElementById('cfgClearKeyBtn');
   const modalDevToggleBtn = document.getElementById('modalDevToggleBtn');
   const modalVlmToggleBtn = document.getElementById('modalVlmToggleBtn');
+  const modalInfiniteFreezeBtn = document.getElementById('modalInfiniteFreezeBtn');
+  const devFreezeRow = document.getElementById('dev-freeze-row');
+  const freezeChargesText = document.getElementById('freeze-charges');
   const customModeModal = document.getElementById('custom-mode-modal');
   const customWordsInput = document.getElementById('customWordsInput');
   const startCustomBtn = document.getElementById('startCustomBtn');
@@ -168,10 +171,25 @@ document.addEventListener('DOMContentLoaded', () => {
     modalVlmToggleBtn.innerText = next.toUpperCase();
   });
 
+  modalInfiniteFreezeBtn.addEventListener('click', () => {
+    gameEngine.infiniteFreeze = !gameEngine.infiniteFreeze;
+    modalInfiniteFreezeBtn.innerText = gameEngine.infiniteFreeze ? "ON" : "OFF";
+    modalInfiniteFreezeBtn.style.color = gameEngine.infiniteFreeze ? "var(--accent-color)" : "var(--text-color)";
+    
+    if (gameEngine.infiniteFreeze) {
+      freezeChargesText.innerText = "∞";
+    } else {
+      freezeChargesText.innerText = gameEngine.freezeCharges;
+    }
+  });
+
   function updateDevModeUI() {
     modalDevToggleBtn.innerText = debugModeUnlocked ? "ACTIVE" : "LOCKED";
     modalDevToggleBtn.style.color = debugModeUnlocked ? "var(--accent-color)" : "var(--text-color)";
     
+    // Show/Hide Infinite Freeze Row
+    devFreezeRow.style.display = debugModeUnlocked ? 'flex' : 'none';
+
     // Update visibility of in-game debug buttons
     if (debugModeUnlocked) {
       if (!levelSelectMenu.classList.contains('hidden')) debugUnlockBtn.style.display = 'block';

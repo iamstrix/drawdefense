@@ -43,6 +43,7 @@ export class GameEngine {
     this.onStageClear = null;
 
     this.debugClickClear = false;
+    this.infiniteFreeze = false;
     
     this.freezeCharges = 0;
     this.isFrozen = false;
@@ -599,9 +600,11 @@ export class GameEngine {
   }
 
   activateFreeze() {
-    if (this.freezeCharges > 0 && !this.isFrozen) {
-        this.freezeCharges--;
-        if (this.freezeChargesEl) this.freezeChargesEl.innerText = this.freezeCharges;
+    if (this.infiniteFreeze || (this.freezeCharges > 0 && !this.isFrozen)) {
+        if (!this.infiniteFreeze) {
+            this.freezeCharges--;
+            if (this.freezeChargesEl) this.freezeChargesEl.innerText = this.freezeCharges;
+        }
         this.freezeTimeLeft = 10.0;
         this.isFrozen = true;
     }
