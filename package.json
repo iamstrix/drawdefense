@@ -1,7 +1,7 @@
 {
   "name": "drawdefense",
   "version": "1.2.0",
-  "description": "Experience the next evolution of semantic arcade gaming. Defend your base by sketching objects identified in real-time by a redundant VLM intelligence system (Groq & Qwen). Featuring the all-new Custom Mode and Freeze ability.",
+  "description": "Defend your base with sketches in draw defense 1.2. Powered by redundant VLMs (Groq & Qwen), it identifies drawings in real-time. Featuring Custom Mode and tactical Freeze stasis. High-performance semantic arcade action built with Vanilla JS & Vite.",
   "private": true,
   "type": "module",
   "scripts": {
