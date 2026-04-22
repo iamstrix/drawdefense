@@ -43,6 +43,12 @@ export class GameEngine {
     this.onStageClear = null;
 
     this.debugClickClear = false;
+    this.infiniteFreeze = false;
+    
+    this.freezeCharges = 0;
+    this.isFrozen = false;
+    this.freezeTimeLeft = 0;
+    this.freezeChargesEl = document.getElementById('freeze-charges');
 
     this.lastTime = performance.now();
 
@@ -177,6 +183,8 @@ export class GameEngine {
   spawnWord() {
     if (this.wordsSpawned >= this.targetWords) return;
 
+    const isCold = Math.random() < 0.1; // 1/10 chance
+    
     let currentPool;
     if (this.gameMode === 'STORY') {
       currentPool = STORY_POOLS[this.storyStage] || STORY_POOLS[0];
@@ -202,7 +210,8 @@ export class GameEngine {
       enemySpriteIndex: enemyIndex,
       animationTimer: 0,
       animationFrame: 0,
-      spawnTime: Date.now() + Math.random() // Tiny random to prevent exact same ms collision
+      spawnTime: Date.now() + Math.random(),
+      isCold: isCold
     });
     this.wordsSpawned++;
     if (this.gameMode === 'STORY') this.wordsLeftEl.innerText = this.targetWords - this.wordsSpawned;
@@ -354,6 +363,18 @@ export class GameEngine {
   }
 
   update(dt) {
+    if (this.gameState !== 'PLAYING' || this.isPaused) return;
+
+    // Handle Freeze Timer
+    if (this.freezeTimeLeft > 0) {
+        this.freezeTimeLeft -= dt;
+        if (this.freezeTimeLeft <= 0) {
+            this.freezeTimeLeft = 0;
+            this.isFrozen = false;
+        }
+    }
+    this.isFrozen = this.freezeTimeLeft > 0;
+
     this.damageTimer = Math.max(0, this.damageTimer - dt);
     this.damageElapsed += dt;
     this.attackTimer = Math.max(0, this.attackTimer - dt);
@@ -396,7 +417,7 @@ export class GameEngine {
         this.health -= 1;
         this.healthEl.innerText = this.health;
         this.damageTimer = 0.2;
-      } else {
+      } else if (!this.isFrozen) {
         const nx = dx / dist;
         const ny = dy / dist;
         w.x += nx * w.speed * dt;
@@ -422,6 +443,13 @@ export class GameEngine {
       if (dist < 40) {
         // Impact!
         this.spawnExplosion(p.target.x, p.target.y);
+        
+        // Cold enemy bonus
+        if (p.target.isCold) {
+            this.freezeCharges++;
+            if (this.freezeChargesEl) this.freezeChargesEl.innerText = this.freezeCharges;
+        }
+
         this.fadingEnemies.push({ ...p.target, opacity: 1.0, life: 1.0 });
         
         // Remove word
@@ -432,7 +460,7 @@ export class GameEngine {
         this.score += 10;
         this.wordsDestroyed++;
         this.scoreEl.innerText = this.score;
-      } else {
+      } else if (!this.isFrozen) {
         const nx = dx / dist;
         const ny = dy / dist;
         p.x += nx * p.speed * dt;
@@ -490,12 +518,27 @@ export class GameEngine {
     }
 
     // Draw Words and Animated Enemies
+    // Draw Enemies
     for (const w of this.words) {
+      this.ctx.save();
       const spriteSize = 70;
+
+      // Special Blue Aura for Cold Enemies
+      if (w.isCold) {
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor = '#0066ff';
+      }
+      
+      // Blue Tinge for Frozen state
+      if (this.isFrozen) {
+        this.ctx.filter = 'drop-shadow(0 0 5px #00f3ff) brightness(1.2) hue-rotate(180deg)';
+      }
+
       const currentSprite = this.enemySprites[w.enemySpriteIndex][w.animationFrame];
       if (currentSprite.complete) {
         this.ctx.drawImage(currentSprite, w.x - spriteSize/2, w.y - spriteSize/2, spriteSize, spriteSize);
       }
+      this.ctx.restore();
 
       // Text Box Logic
       this.ctx.font = 'bold 16px Outfit, sans-serif';
@@ -537,6 +580,11 @@ export class GameEngine {
         
         // Match drawing scale roughly to enemy size or slightly smaller
         const scale = 0.4;
+        
+        if (this.isFrozen) {
+           this.ctx.filter = 'drop-shadow(0 0 10px #00f3ff) brightness(1.3) hue-rotate(180deg)';
+        }
+
         this.ctx.drawImage(p.image, -p.image.width * scale / 2, -p.image.height * scale / 2, p.image.width * scale, p.image.height * scale);
         this.ctx.restore();
     }
@@ -549,6 +597,17 @@ export class GameEngine {
     this.ctx.font = 'bold 48px Outfit, sans-serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillText("GAME OVER", this.canvas.width / 2, this.canvas.height / 2);
+  }
+
+  activateFreeze() {
+    if (this.infiniteFreeze || (this.freezeCharges > 0 && !this.isFrozen)) {
+        if (!this.infiniteFreeze) {
+            this.freezeCharges--;
+            if (this.freezeChargesEl) this.freezeChargesEl.innerText = this.freezeCharges;
+        }
+        this.freezeTimeLeft = 10.0;
+        this.isFrozen = true;
+    }
   }
 
   drawWin() {
