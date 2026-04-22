@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalDevToggleBtn = document.getElementById('modalDevToggleBtn');
   const modalVlmToggleBtn = document.getElementById('modalVlmToggleBtn');
   const modalInfiniteFreezeBtn = document.getElementById('modalInfiniteFreezeBtn');
+  const modalMenuBounceBtn = document.getElementById('modalMenuBounceBtn');
   const devFreezeRow = document.getElementById('dev-freeze-row');
   const freezeChargesText = document.getElementById('freeze-charges');
   const customModeModal = document.getElementById('custom-mode-modal');
@@ -181,6 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       freezeChargesText.innerText = gameEngine.freezeCharges;
     }
+  });
+
+  modalMenuBounceBtn.addEventListener('click', () => {
+    menuInteractivity.allowBouncing = !menuInteractivity.allowBouncing;
+    modalMenuBounceBtn.innerText = menuInteractivity.allowBouncing ? "ON" : "OFF";
+    modalMenuBounceBtn.style.color = menuInteractivity.allowBouncing ? "var(--accent-color)" : "var(--text-color)";
   });
 
   function updateDevModeUI() {

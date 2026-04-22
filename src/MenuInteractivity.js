@@ -7,6 +7,7 @@ export class MenuInteractivity {
     this.doodles = [];
     this.currentStroke = [];
     this.isDrawing = false;
+    this.allowBouncing = true;
     
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -127,16 +128,25 @@ export class MenuInteractivity {
       d.y = (d.y || 0) + d.vy;
       d.rotation += d.rv;
       
-      // Bounce off Left/Right
-      if (d.x <= 0 || d.x + d.canvas.width >= window.innerWidth) {
-        d.vx *= -1;
-        d.x = Math.max(0, Math.min(d.x, window.innerWidth - d.canvas.width));
-      }
-      
-      // Bounce off Top/Bottom
-      if (d.y <= 0 || d.y + d.canvas.height >= window.innerHeight) {
-        d.vy *= -1;
-        d.y = Math.max(0, Math.min(d.y, window.innerHeight - d.canvas.height));
+      if (this.allowBouncing) {
+        // Bounce off Left/Right
+        if (d.x <= 0 || d.x + d.canvas.width >= window.innerWidth) {
+          d.vx *= -1;
+          d.x = Math.max(0, Math.min(d.x, window.innerWidth - d.canvas.width));
+        }
+        
+        // Bounce off Top/Bottom
+        if (d.y <= 0 || d.y + d.canvas.height >= window.innerHeight) {
+          d.vy *= -1;
+          d.y = Math.max(0, Math.min(d.y, window.innerHeight - d.canvas.height));
+        }
+      } else {
+        // Fly Off: Remove if far outside
+        const padding = 200;
+        if (d.x < -padding || d.x > window.innerWidth + padding || 
+            d.y < -padding || d.y > window.innerHeight + padding) {
+          this.doodles.splice(i, 1);
+        }
       }
     }
   }
