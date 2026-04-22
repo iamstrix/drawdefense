@@ -482,6 +482,52 @@ body::before {
   pointer-events: none;
 }
 
+#abilities-container {
+  position: fixed;
+  top: 20px;
+  right: 110px;
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+#freeze-ability {
+  background: #f0f0f0;
+  border: 2px solid #000;
+  border-radius: 8px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+#freeze-ability .ability-label {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+#freeze-charges {
+  font-size: 20px;
+}
+
+:root.theme-galaxy #freeze-ability {
+  background: rgba(0, 100, 255, 0.1);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+:root.theme-galaxy #freeze-ability .ability-label {
+  opacity: 1;
+  text-shadow: 0 0 5px var(--accent-color);
+}
+
 :root.theme-galaxy #clearDrawBtn {
   background: rgba(20, 20, 50, 0.5);
   border-color: var(--accent-color);
