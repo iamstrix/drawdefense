@@ -149,7 +149,7 @@ export class GameEngine {
       this.wordsLeftContainer.style.display = 'none';
       this.levelContainer.style.display = 'none';
       this.targetWords = Infinity;
-      this.spawnInterval = 5000;
+      this.spawnInterval = 4000;
     }
     this.updateBackground();
     this.spawnTimer = this.spawnInterval;
@@ -354,7 +354,7 @@ export class GameEngine {
     if (this.spawnTimer > this.spawnInterval && this.wordsSpawned < this.targetWords) {
       this.spawnWord();
       this.spawnTimer = 0;
-      this.spawnInterval = Math.max(1500, this.spawnInterval - 30);
+      this.spawnInterval = Math.max(800, this.spawnInterval - 120);
     }
 
     this.update(dt);
