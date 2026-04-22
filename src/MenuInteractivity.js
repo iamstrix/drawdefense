@@ -6,13 +6,22 @@ export class MenuInteractivity {
     
     this.doodles = [];
     this.currentStroke = [];
+    this.paths = [];
     this.isDrawing = false;
     this.allowBouncing = true;
+    this.multiStroke = false;
     
     this.resize();
     window.addEventListener('resize', () => this.resize());
     
     this.canvas.addEventListener('pointerdown', (e) => this.startDraw(e));
+    this.canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (this.multiStroke && this.paths.length > 0) {
+        this.createDoodle(this.paths);
+        this.paths = [];
+      }
+    });
     
     // Bind methods for dynamic window listeners
     this._onPointerMove = this.draw.bind(this);
@@ -24,6 +33,15 @@ export class MenuInteractivity {
   resize() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
+  }
+
+  setMultiStroke(val) {
+    this.multiStroke = val;
+    // flush any pending strokes if we toggle OFF
+    if (!val && this.paths.length > 0) {
+      this.createDoodle(this.paths);
+      this.paths = [];
+    }
   }
 
   startDraw(e) {
@@ -53,20 +71,27 @@ export class MenuInteractivity {
 
     if (this.currentStroke.length < 5) {
       this.currentStroke = [];
-      return;
+    } else {
+      if (this.multiStroke) {
+        this.paths.push(this.currentStroke);
+      } else {
+        this.createDoodle([this.currentStroke]);
+      }
+      this.currentStroke = [];
     }
-    
-    this.createDoodle(this.currentStroke);
-    this.currentStroke = [];
   }
   
-  createDoodle(stroke) {
+  createDoodle(paths) {
+    if (!paths || paths.length === 0) return;
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    stroke.forEach(p => {
-      minX = Math.min(minX, p.x);
-      minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x);
-      maxY = Math.max(maxY, p.y);
+    paths.forEach(stroke => {
+      stroke.forEach(p => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
     });
     
     const padding = 10;
@@ -80,12 +105,6 @@ export class MenuInteractivity {
     offscreen.height = height;
     const octx = offscreen.getContext('2d');
     
-    octx.beginPath();
-    octx.moveTo(stroke[0].x - minX + padding, stroke[0].y - minY + padding);
-    for(let i=1; i<stroke.length; i++) {
-      octx.lineTo(stroke[i].x - minX + padding, stroke[i].y - minY + padding);
-    }
-    
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     octx.strokeStyle = themeGalaxy ? '#00f3ff' : '#000';
     octx.lineWidth = themeGalaxy ? 3 : 2;
@@ -97,7 +116,15 @@ export class MenuInteractivity {
         octx.shadowColor = '#00f3ff';
     }
     
-    octx.stroke();
+    paths.forEach(stroke => {
+      if (stroke.length < 2) return;
+      octx.beginPath();
+      octx.moveTo(stroke[0].x - minX + padding, stroke[0].y - minY + padding);
+      for(let i=1; i<stroke.length; i++) {
+        octx.lineTo(stroke[i].x - minX + padding, stroke[i].y - minY + padding);
+      }
+      octx.stroke();
+    });
     
     this.doodles.push({
       canvas: offscreen,
@@ -157,6 +184,27 @@ export class MenuInteractivity {
     const themeGalaxy = document.documentElement.classList.contains('theme-galaxy');
     const strokeColor = themeGalaxy ? '#00f3ff' : '#000';
 
+    // Draw in-progress multi-stroke paths
+    if (this.paths && this.paths.length > 0) {
+      this.ctx.strokeStyle = strokeColor;
+      this.ctx.lineWidth = 4;
+      this.ctx.lineCap = 'round';
+      if (themeGalaxy) {
+          this.ctx.shadowBlur = 15;
+          this.ctx.shadowColor = '#00f3ff';
+      }
+      this.paths.forEach(stroke => {
+        if (stroke.length < 2) return;
+        this.ctx.beginPath();
+        this.ctx.moveTo(stroke[0].x, stroke[0].y);
+        for(let i=1; i<stroke.length; i++) {
+          this.ctx.lineTo(stroke[i].x, stroke[i].y);
+        }
+        this.ctx.stroke();
+      });
+      this.ctx.shadowBlur = 0;
+    }
+
     // Draw current active stroke
     if (this.isDrawing && this.currentStroke.length > 1) {
       this.ctx.beginPath();
@@ -189,6 +237,7 @@ export class MenuInteractivity {
   clear() {
     this.doodles = [];
     this.currentStroke = [];
+    this.paths = [];
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 }

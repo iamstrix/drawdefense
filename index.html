@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Defend your base with sketches in draw defense 1.2. Powered by redundant VLMs (Groq & Qwen), it identifies drawings in real-time. Featuring Custom Mode and tactical Freeze stasis. High-performance semantic arcade action built with Vanilla JS & Vite." />
+  <meta name="description"
+    content="Defend your base with sketches in draw defense 1.2. Powered by redundant VLMs (Groq & Qwen), it identifies drawings in real-time. Featuring Custom Mode and tactical Freeze stasis. High-performance semantic arcade action built with Vanilla JS & Vite." />
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,9 +37,10 @@
 
     <!-- Settings (Debug) Toggle -->
     <button id="settingsBtn" title="Developer Settings">⚙️</button>
-    
+
     <!-- Global Clear Button -->
-    <button id="clearDrawBtn" class="control-btn" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">clear</button>
+    <button id="clearDrawBtn" class="control-btn"
+      style="position: fixed; top: 20px; right: 20px; z-index: 1000;">clear</button>
 
     <!-- Abilities Container -->
     <div id="abilities-container">
@@ -149,6 +151,14 @@
         <button id="modalMenuBounceBtn" class="control-btn">ON</button>
       </div>
 
+      <div class="setting-row">
+        <div class="setting-label">
+          <span>Multi-Stroke Button</span>
+          <span class="hint">Right-click confirms drawing</span>
+        </div>
+        <button id="modalMenuMultiStrokeBtn" class="control-btn">OFF</button>
+      </div>
+
       <div class="setting-row" id="dev-freeze-row" style="display: none;">
         <span>Infinite Freeze</span>
         <button id="modalInfiniteFreezeBtn" class="control-btn">OFF</button>
@@ -175,12 +185,16 @@
   <div id="custom-mode-modal" class="overlay hidden">
     <div class="modal-content">
       <h2 class="title" style="font-size: 48px; margin-bottom: 10px;">custom mode</h2>
-      <p style="margin-bottom: 25px; opacity: 0.7; text-align: center; font-size: 18px;">Enter target words separated by commas.<br/>The AI will only look for these exact words.</p>
-      <textarea id="customWordsInput" placeholder="Ex: galaxy, black hole, star, nebula..." style="width: 100%; height: 140px; background: rgba(255,255,255,0.05); color: var(--text-color); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: inherit; font-size: 20px; resize: none; margin-bottom: 30px; outline: none; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
-      
+      <p style="margin-bottom: 25px; opacity: 0.7; text-align: center; font-size: 18px;">Enter target words separated by
+        commas.<br />The AI will only look for these exact words.</p>
+      <textarea id="customWordsInput" placeholder="Ex: galaxy, black hole, star, nebula..."
+        style="width: 100%; height: 140px; background: rgba(255,255,255,0.05); color: var(--text-color); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; font-family: inherit; font-size: 20px; resize: none; margin-bottom: 30px; outline: none; transition: border-color 0.3s ease; box-sizing: border-box;"></textarea>
+
       <div style="display: flex; gap: 20px; width: 100%;">
         <button id="cancelCustomBtn" class="control-btn" style="flex: 1; padding: 15px;">Cancel</button>
-        <button id="startCustomBtn" class="control-btn" style="flex: 1; padding: 15px; background: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color);">Start Game</button>
+        <button id="startCustomBtn" class="control-btn"
+          style="flex: 1; padding: 15px; background: var(--accent-color); color: var(--bg-color); border-color: var(--accent-color);">Start
+          Game</button>
       </div>
     </div>
   </div>

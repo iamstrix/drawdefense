@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalVlmToggleBtn = document.getElementById('modalVlmToggleBtn');
   const modalInfiniteFreezeBtn = document.getElementById('modalInfiniteFreezeBtn');
   const modalMenuBounceBtn = document.getElementById('modalMenuBounceBtn');
+  const modalMenuMultiStrokeBtn = document.getElementById('modalMenuMultiStrokeBtn');
   const devFreezeRow = document.getElementById('dev-freeze-row');
   const freezeChargesText = document.getElementById('freeze-charges');
   const customModeModal = document.getElementById('custom-mode-modal');
@@ -188,6 +189,13 @@ document.addEventListener('DOMContentLoaded', () => {
     menuInteractivity.allowBouncing = !menuInteractivity.allowBouncing;
     modalMenuBounceBtn.innerText = menuInteractivity.allowBouncing ? "ON" : "OFF";
     modalMenuBounceBtn.style.color = menuInteractivity.allowBouncing ? "var(--accent-color)" : "var(--text-color)";
+  });
+
+  modalMenuMultiStrokeBtn.addEventListener('click', () => {
+    const newVal = !menuInteractivity.multiStroke;
+    menuInteractivity.setMultiStroke(newVal);
+    modalMenuMultiStrokeBtn.innerText = newVal ? "ON" : "OFF";
+    modalMenuMultiStrokeBtn.style.color = newVal ? "var(--accent-color)" : "var(--text-color)";
   });
 
   function updateDevModeUI() {
