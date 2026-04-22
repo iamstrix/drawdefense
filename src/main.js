@@ -300,10 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Trigger Clear Board
     if (e.key.toLowerCase() === clearKey && !isConfiguringKey) {
-      // Clear game draw board
       if (drawBoard) drawBoard.clear();
-      // Clear menu draw board (if visible)
       if (menuInteractivity) menuInteractivity.clear();
+    }
+
+    // Trigger Freeze Ability
+    if (e.key.toLowerCase() === 'f' && !isConfiguringKey) {
+      gameEngine.activateFreeze();
     }
   });
 });

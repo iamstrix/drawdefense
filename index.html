@@ -39,6 +39,14 @@
     
     <!-- Global Clear Button -->
     <button id="clearDrawBtn" class="control-btn" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">clear</button>
+
+    <!-- Abilities Container -->
+    <div id="abilities-container" style="position: fixed; top: 20px; right: 110px; z-index: 1000; display: flex; gap: 10px;">
+      <div id="freeze-ability" style="background: rgba(0, 100, 255, 0.2); border: 2px solid #00f3ff; border-radius: 8px; padding: 5px 12px; display: flex; align-items: center; gap: 10px; color: #00f3ff; font-weight: bold; backdrop-filter: blur(5px);">
+        <span style="font-size: 14px;">[F] FREEZE</span>
+        <span id="freeze-charges" style="font-size: 20px;">0</span>
+      </div>
+    </div>
   </div>
 
   <!-- Main Menu Overlay -->
