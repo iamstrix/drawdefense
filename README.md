@@ -6,13 +6,13 @@
 
 ## 🌟 Key Features
 
-- **Redundant VLM Intelligence**: Uses a dual-provider system with **Groq (Llama 4 Scout)** as the primary backend and **Hugging Face (Qwen 3 VL)** as an automatic fallback. If one provider is down, the game seamlessly retries your sketch with the other.
-- **Sketch Projectiles**: Your drawings don't just clear enemies—they become ammunition. Successful matches capture your sketch and fire it from the cat base towards the target in real-time.
-- **Chronological Priority**: Smart targeting logic ensures that synonymous enemies (e.g., two "apples") are cleared in the order they spawned, preventing wasted sketches.
-- **Universal Settings Modal**: A centralized hub to configure **Galaxy Mode**, rebind the **Global Clear Hotkey**, and manage **Developer Mode**.
-- **Cinematic Story Menu**: High-polish stage selection featuring looping enemy and UFO marquees that frame your progress.
+- **Redundant VLM Intelligence**: Uses a dual-provider system with **Groq (Llama 4 Scout)** as the primary backend and **Hugging Face (Qwen 3 VL)** as an automatic fallback.
+- **Custom Mode Setup**: A new sandbox mode where you define the target vocabulary pool via a custom setup GUI, testing the VLM's semantic range with any words you can imagine.
+- **Freeze Ability & Cold Enemies**: Collect charges from rare blue-aura "Cold Enemies" to trigger a **10s Time Stasis**. Projectiles fire and hold mid-air during the freeze, leading to a massive synchronized impact.
+- **Sketch Projectiles**: Your drawings don't just clear enemies—they become ammo. Matches are fired from the cat base with physical impact logic.
+- **Universal Settings Modal**: A centralized hub to configure **Redundant VLM Providers**, **Galaxy Mode**, and custom **Clear Hotkeys**.
 - **Interactive Menu Background**: Leave your mark on the main menu—doodles now feature bouncing physics and reflection logic.
-- **Dynamic VFX**: High-octane square particle explosions with grayscale fallout and fading entity effects upon projectile impact.
+- **Cinematic Story Menu**: High-polish stage selection featuring looping enemy and UFO marquees that frame your progress.
 
 ---
 
